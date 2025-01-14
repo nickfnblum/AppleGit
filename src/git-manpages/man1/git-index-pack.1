@@ -2,12 +2,12 @@
 .\"     Title: git-index-pack
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-INDEX\-PACK" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-INDEX\-PACK" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,14 +32,14 @@ git-index-pack \- Build pack index file for an existing packed archive
 .SH "SYNOPSIS"
 .sp
 .nf
-\fIgit index\-pack\fR [\-v] [\-o <index\-file>] <pack\-file>
+\fIgit index\-pack\fR [\-v] [\-o <index\-file>] [\-\-[no\-]rev\-index] <pack\-file>
 \fIgit index\-pack\fR \-\-stdin [\-\-fix\-thin] [\-\-keep] [\-v] [\-o <index\-file>]
-                 [<pack\-file>]
+                  [\-\-[no\-]rev\-index] [<pack\-file>]
 .fi
 .sp
 .SH "DESCRIPTION"
 .sp
-Reads a packed archive (\&.pack) from the specified file, and builds a pack index file (\&.idx) for it\&. The packed archive together with the pack index can then be placed in the objects/pack/ directory of a Git repository\&.
+Reads a packed archive (\&.pack) from the specified file, and builds a pack index file (\&.idx) for it\&. Optionally writes a reverse\-index (\&.rev) for the specified pack\&. The packed archive together with the pack index can then be placed in the objects/pack/ directory of a Git repository\&.
 .SH "OPTIONS"
 .PP
 \-v
@@ -50,6 +50,16 @@ Be verbose about what is going on, including progress status\&.
 \-o <index\-file>
 .RS 4
 Write the generated pack index into the specified file\&. Without this option the name of pack index file is constructed from the name of packed archive file by replacing \&.pack with \&.idx (and the program fails if the name of packed archive does not end with \&.pack)\&.
+.RE
+.PP
+\-\-[no\-]rev\-index
+.RS 4
+When this flag is provided, generate a reverse index (a
+\fB\&.rev\fR
+file) corresponding to the given pack\&. If
+\fB\-\-verify\fR
+is given, ensure that the existing reverse index is correct\&. Takes precedence over
+\fBpack\&.writeReverseIndex\fR\&.
 .RE
 .PP
 \-\-stdin
@@ -93,6 +103,15 @@ This is intended to be used by the test suite only\&. It allows to force the ver
 Die, if the pack contains broken objects or links\&.
 .RE
 .PP
+\-\-progress\-title
+.RS 4
+For internal use only\&.
+.sp
+Set the title of the progress bar\&. The title is "Receiving objects" by default and "Indexing objects" when
+\fB\-\-stdin\fR
+is specified\&.
+.RE
+.PP
 \-\-check\-self\-contained\-and\-connected
 .RS 4
 Die if the pack contains broken links\&. For internal use only\&.
@@ -100,7 +119,9 @@ Die if the pack contains broken links\&. For internal use only\&.
 .PP
 \-\-fsck\-objects
 .RS 4
-Die if the pack contains broken objects\&. For internal use only\&.
+For internal use only\&.
+.sp
+Die if the pack contains broken objects\&. If the pack contains a tree pointing to a \&.gitmodules blob that does not exist, prints the hash of that blob (for the caller to check) after the hash that goes into the name of the pack/idx file (see "Notes")\&.
 .RE
 .PP
 \-\-threads=<n>
@@ -129,9 +150,24 @@ THIS OPTION IS EXPERIMENTAL! SHA\-256 support is experimental and still in an ea
 \fB\-\-object\-format=sha256\fR
 for testing purposes\&.
 .RE
+.PP
+\-\-promisor[=<message>]
+.RS 4
+Before committing the pack\-index, create a \&.promisor file for this pack\&. Particularly helpful when writing a promisor pack with \-\-fix\-thin since the name of the pack is not final until the pack has been fully written\&. If a
+\fB<message>\fR
+is provided, then that content will be written to the \&.promisor file for future reference\&. See
+\m[blue]\fBpartial clone\fR\m[]\&\s-2\u[1]\d\s+2
+for more information\&.
+.RE
 .SH "NOTES"
 .sp
 Once the index has been created, the hash that goes into the name of the pack/idx file is printed to stdout\&. If \-\-stdin was also used then this is prefixed by either "pack\et", or "keep\et" if a new \&.keep file was successfully created\&. This is useful to remove a \&.keep file used as a lock to prevent the race with \fIgit repack\fR mentioned above\&.
 .SH "GIT"
 .sp
 Part of the \fBgit\fR(1) suite
+.SH "NOTES"
+.IP " 1." 4
+partial clone
+.RS 4
+\%git-htmldocs/technical/partial-clone.html
+.RE

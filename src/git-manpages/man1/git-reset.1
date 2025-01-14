@@ -2,12 +2,12 @@
 .\"     Title: git-reset
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-RESET" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-RESET" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -117,7 +117,7 @@ is specified, removed paths are marked as intent\-to\-add (see
 .RS 4
 Resets the index and working tree\&. Any changes to tracked files in the working tree since
 \fB<commit>\fR
-are discarded\&.
+are discarded\&. Any untracked files or directories in the way of writing any tracked files are simply deleted\&.
 .RE
 .PP
 \-\-merge
@@ -156,15 +156,14 @@ When the working tree is updated, using \-\-recurse\-submodules will also recurs
 See "Reset, restore and revert" in \fBgit\fR(1) for the differences between the three commands\&.
 .SH "OPTIONS"
 .PP
-\-q, \-\-quiet, \-\-no\-quiet
+\-q, \-\-quiet
 .RS 4
-Be quiet, only report errors\&. The default behavior is set by the
-\fBreset\&.quiet\fR
-config option\&.
-\fB\-\-quiet\fR
-and
-\fB\-\-no\-quiet\fR
-will override the default behavior\&.
+Be quiet, only report errors\&.
+.RE
+.PP
+\-\-refresh, \-\-no\-refresh
+.RS 4
+Refresh the index after a mixed reset\&. Enabled by default\&.
 .RE
 .PP
 \-\-pathspec\-from\-file=<file>

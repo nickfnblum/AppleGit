@@ -2,12 +2,12 @@
 .\"     Title: git-clone
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-CLONE" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-CLONE" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,14 +32,14 @@ git-clone \- Clone a repository into a new directory
 .SH "SYNOPSIS"
 .sp
 .nf
-\fIgit clone\fR [\-\-template=<template_directory>]
+\fIgit clone\fR [\-\-template=<template\-directory>]
           [\-l] [\-s] [\-\-no\-hardlinks] [\-q] [\-n] [\-\-bare] [\-\-mirror]
           [\-o <name>] [\-b <name>] [\-u <upload\-pack>] [\-\-reference <repository>]
-          [\-\-dissociate] [\-\-separate\-git\-dir <git dir>]
+          [\-\-dissociate] [\-\-separate\-git\-dir <git\-dir>]
           [\-\-depth <depth>] [\-\-[no\-]single\-branch] [\-\-no\-tags]
           [\-\-recurse\-submodules[=<pathspec>]] [\-\-[no\-]shallow\-submodules]
-          [\-\-[no\-]remote\-submodules] [\-\-jobs <n>] [\-\-sparse]
-          [\-\-filter=<filter>] [\-\-] <repository>
+          [\-\-[no\-]remote\-submodules] [\-\-jobs <n>] [\-\-sparse] [\-\-[no\-]reject\-shallow]
+          [\-\-filter=<filter> [\-\-also\-filter\-submodules]] [\-\-] <repository>
           [<directory>]
 .fi
 .sp
@@ -160,6 +160,13 @@ are given, they are all sent to the other side in the order listed on the comman
 No checkout of HEAD is performed after the clone is complete\&.
 .RE
 .PP
+\-\-[no\-]reject\-shallow
+.RS 4
+Fail if the source repository is a shallow repository\&. The
+\fIclone\&.rejectShallow\fR
+configuration variable can be used to specify the default\&.
+.RE
+.PP
 \-\-bare
 .RS 4
 Make a
@@ -178,7 +185,9 @@ because there is nowhere to check out the working tree\&. Also the branch heads 
 .PP
 \-\-sparse
 .RS 4
-Initialize the sparse\-checkout file so the working directory starts with only the files in the root of the repository\&. The sparse\-checkout file can be modified to grow the working directory as needed\&.
+Employ a sparse\-checkout, with only files in the toplevel directory initially being present\&. The
+\fBgit-sparse-checkout\fR(1)
+command can be used to grow the working directory as needed\&.
 .RE
 .PP
 \-\-filter=<filter\-spec>
@@ -195,6 +204,16 @@ will filter out all blobs of size at least
 \fB\-\-filter\fR
 option in
 \fBgit-rev-list\fR(1)\&.
+.RE
+.PP
+\-\-also\-filter\-submodules
+.RS 4
+Also apply the partial clone filter to any submodules in the repository\&. Requires
+\fB\-\-filter\fR
+and
+\fB\-\-recurse\-submodules\fR\&. This can be turned on by default by setting the
+\fBclone\&.filterSubmodules\fR
+config option\&.
 .RE
 .PP
 \-\-mirror
@@ -232,7 +251,7 @@ can also take tags and detaches the HEAD at that commit in the resulting reposit
 When given, and the repository to clone from is accessed via ssh, this specifies a non\-default path for the command run on the other end\&.
 .RE
 .PP
-\-\-template=<template_directory>
+\-\-template=<template\-directory>
 .RS 4
 Specify the directory from which templates will be used; (See the "TEMPLATE DIRECTORY" section of
 \fBgit-init\fR(1)\&.)
@@ -332,7 +351,7 @@ to
 \fBgit submodule update\fR\&.
 .RE
 .PP
-\-\-separate\-git\-dir=<git dir>
+\-\-separate\-git\-dir=<git\-dir>
 .RS 4
 Instead of placing the cloned repository where it is supposed to be, place the cloned repository at the specified directory, then make a filesystem\-agnostic Git symbolic link to there\&. The result is Git repository can be separated from working tree\&.
 .RE
@@ -360,6 +379,18 @@ and
 \fBfoo\fR
 for
 \fBhost\&.xz:foo/\&.git\fR)\&. Cloning into an existing directory is only allowed if the directory is empty\&.
+.RE
+.PP
+\-\-bundle\-uri=<uri>
+.RS 4
+Before fetching from the remote, fetch a bundle from the given
+\fB<uri>\fR
+and unbundle the data into the local repository\&. The refs in the bundle will be stored under the hidden
+\fBrefs/bundle/*\fR
+namespace\&. This option is incompatible with
+\fB\-\-depth\fR,
+\fB\-\-shallow\-since\fR, and
+\fB\-\-shallow\-exclude\fR\&.
 .RE
 .SH "GIT URLS"
 .sp
@@ -663,6 +694,47 @@ $ git clone \-\-bare \-l /home/proj/\&.git /pub/scm/proj\&.git
 .RE
 .\}
 .sp
+.RE
+.SH "CONFIGURATION"
+.sp
+Everything below this line in this section is selectively included from the \fBgit-config\fR(1) documentation\&. The content is the same as what\(cqs found there:
+.PP
+init\&.templateDir
+.RS 4
+Specify the directory from which templates will be copied\&. (See the "TEMPLATE DIRECTORY" section of
+\fBgit-init\fR(1)\&.)
+.RE
+.PP
+init\&.defaultBranch
+.RS 4
+Allows overriding the default branch name e\&.g\&. when initializing a new repository\&.
+.RE
+.PP
+clone\&.defaultRemoteName
+.RS 4
+The name of the remote to create when cloning a repository\&. Defaults to
+\fBorigin\fR, and can be overridden by passing the
+\fB\-\-origin\fR
+command\-line option to
+\fBgit-clone\fR(1)\&.
+.RE
+.PP
+clone\&.rejectShallow
+.RS 4
+Reject to clone a repository if it is a shallow one, can be overridden by passing option
+\fB\-\-reject\-shallow\fR
+in command line\&. See
+\fBgit-clone\fR(1)
+.RE
+.PP
+clone\&.filterSubmodules
+.RS 4
+If a partial clone filter is provided (see
+\fB\-\-filter\fR
+in
+\fBgit-rev-list\fR(1)) and
+\fB\-\-recurse\-submodules\fR
+is used, also apply the filter to submodules\&.
 .RE
 .SH "GIT"
 .sp

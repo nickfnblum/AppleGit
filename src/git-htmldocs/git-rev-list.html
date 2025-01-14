@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 9.0.0rc2" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>git-rev-list(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -749,7 +749,7 @@ git-rev-list(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>git rev-list</em> [&lt;options&gt;] &lt;commit&gt;&#8230; [[--] &lt;path&gt;&#8230;]</pre>
+<pre class="content"><em>git rev-list</em> [&lt;options&gt;] &lt;commit&gt;&#8230; [--] [&lt;path&gt;&#8230;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -843,6 +843,16 @@ ordering and formatting options, such as <code>--reverse</code>.</p></div>
 <dd>
 <p>
         Show commits more recent than a specific date.
+</p>
+</dd>
+<dt class="hdlist1">
+--since-as-filter=&lt;date&gt;
+</dt>
+<dd>
+<p>
+        Show all commits more recent than a specific date. This visits
+        all commits in the range, rather than stopping at the first commit which
+        is older than a specific date.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1037,13 +1047,26 @@ parents) and <code>--max-parents=-1</code> (negative numbers denote no upper lim
 </dt>
 <dd>
 <p>
-        Follow only the first parent commit upon seeing a merge
-        commit.  This option can give a better overview when
-        viewing the evolution of a particular topic branch,
-        because merges into a topic branch tend to be only about
-        adjusting to updated upstream from time to time, and
-        this option allows you to ignore the individual commits
-        brought in to your history by such a merge.
+        When finding commits to include, follow only the first
+        parent commit upon seeing a merge commit.  This option
+        can give a better overview when viewing the evolution of
+        a particular topic branch, because merges into a topic
+        branch tend to be only about adjusting to updated upstream
+        from time to time, and this option allows you to ignore
+        the individual commits brought in to your history by such
+        a merge.
+</p>
+</dd>
+<dt class="hdlist1">
+--exclude-first-parent-only
+</dt>
+<dd>
+<p>
+        When finding commits to exclude (with a <em>&#94;</em>), follow only
+        the first parent commit upon seeing a merge commit.
+        This can be used to find the set of changes in a topic branch
+        from the point where it diverged from the remote branch, given
+        that arbitrary merges can be valid topic branch changes.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1127,6 +1150,18 @@ or <code>--all</code>. If a trailing <em>/&#42;</em> is intended, it must be giv
 explicitly.</p></div>
 </dd>
 <dt class="hdlist1">
+--exclude-hidden=[receive|uploadpack]
+</dt>
+<dd>
+<p>
+        Do not include refs that would be hidden by <code>git-receive-pack</code> or
+        <code>git-upload-pack</code> by consulting the appropriate <code>receive.hideRefs</code> or
+        <code>uploadpack.hideRefs</code> configuration along with <code>transfer.hideRefs</code> (see
+        <a href="git-config.html">git-config(1)</a>). This option affects the next pseudo-ref option
+        <code>--all</code> or <code>--glob</code> and is cleared after processing them.
+</p>
+</dd>
+<dt class="hdlist1">
 --reflog
 </dt>
 <dd>
@@ -1191,6 +1226,25 @@ explicitly.</p></div>
         test the exit status to see if a range of objects is fully
         connected (or not).  It is faster than redirecting stdout
         to <code>/dev/null</code> as the output does not have to be formatted.
+</p>
+</dd>
+<dt class="hdlist1">
+--disk-usage
+</dt>
+<dt class="hdlist1">
+--disk-usage=human
+</dt>
+<dd>
+<p>
+        Suppress normal output; instead, print the sum of the bytes used
+        for on-disk storage by the selected commits or objects. This is
+        equivalent to piping the output into <code>git cat-file
+        --batch-check='%(objectsize:disk)'</code>, except that it runs much
+        faster (especially with <code>--use-bitmap-index</code>). See the <code>CAVEATS</code>
+        section in <a href="git-cat-file.html">git-cat-file(1)</a> for the limitations of what
+        "on-disk storage" means.
+        With the optional value <code>human</code>, on-disk storage size is shown
+        in human-readable string(e.g. 12.24 Kib, 3.50 Mib).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1428,15 +1482,17 @@ Default mode
 </p>
 </dd>
 <dt class="hdlist1">
---ancestry-path
+--ancestry-path[=&lt;commit&gt;]
 </dt>
 <dd>
 <p>
         When given a range of commits to display (e.g. <em>commit1..commit2</em>
-        or <em>commit2 &#94;commit1</em>), only display commits that exist
-        directly on the ancestry chain between the <em>commit1</em> and
-        <em>commit2</em>, i.e. commits that are both descendants of <em>commit1</em>,
-        and ancestors of <em>commit2</em>.
+        or <em>commit2 &#94;commit1</em>), only display commits in that range
+        that are ancestors of &lt;commit&gt;, descendants of &lt;commit&gt;, or
+        &lt;commit&gt; itself.  If no commit is specified, use <em>commit1</em> (the
+        excluded part of the range) as &lt;commit&gt;.  Can be passed multiple
+        times; if so, a commit is included if it is any of the commits
+        given or if it is an ancestor or descendant of one of them.
 </p>
 </dd>
 </dl></div>
@@ -1679,14 +1735,13 @@ If after this parent rewriting, <code>C'</code> is a root or merge commit (has
 <div class="paragraph"><p>There is another simplification mode available:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
---ancestry-path
+--ancestry-path[=&lt;commit&gt;]
 </dt>
 <dd>
 <p>
-        Limit the displayed commits to those directly on the ancestry
-        chain between the &#8220;from&#8221; and &#8220;to&#8221; commits in the given commit
-        range. I.e. only display commits that are ancestor of the &#8220;to&#8221;
-        commit and descendants of the &#8220;from&#8221; commit.
+        Limit the displayed commits to those which are an ancestor of
+        &lt;commit&gt;, or which are a descendant of &lt;commit&gt;, or are &lt;commit&gt;
+        itself.
 </p>
 <div class="paragraph"><p>As an example use case, consider the following commit history:</p></div>
 <div class="listingblock">
@@ -1715,6 +1770,26 @@ option does. Applied to the <em>D..M</em> range, it results in:</p></div>
                   G---H---I---J
                                \
                                 L--M</code></pre>
+</div></div>
+<div class="paragraph"><p>We can also use <code>--ancestry-path=D</code> instead of <code>--ancestry-path</code> which
+means the same thing when applied to the <em>D..M</em> range but is just more
+explicit.</p></div>
+<div class="paragraph"><p>If we instead are interested in a given topic within this range, and all
+commits affected by that topic, we may only want to view the subset of
+<code>D..M</code> which contain that topic in their ancestry path.  So, using
+<code>--ancestry-path=H D..M</code> for example would result in:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>                E
+                 \
+                  G---H---I---J
+                               \
+                                L--M</code></pre>
+</div></div>
+<div class="paragraph"><p>Whereas <code>--ancestry-path=K D..M</code> would result in</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>                K---------------L--M</code></pre>
 </div></div>
 </dd>
 </dl></div>
@@ -1767,7 +1842,7 @@ merge commits <code>O</code> and <code>P</code>. With parent rewriting, the resu
 not actually contribute a change to <code>file.txt</code>. They only merged a topic
 that was based on an older version of <code>file.txt</code>. This is a common
 issue in repositories using a workflow where many contributors work in
-parallel and merge their topic branches along a single trunk: manu
+parallel and merge their topic branches along a single trunk: many
 unrelated merges appear in the <code>--full-history</code> results.</p></div>
 <div class="paragraph"><p>When using the <code>--simplify-merges</code> option, the commits <code>O</code> and <code>P</code>
 disappear from the results. This is because the rewritten second parents
@@ -2073,9 +2148,11 @@ together.</p></div>
 or units.  n may be zero.  The suffixes k, m, and g can be used to name
 units in KiB, MiB, or GiB.  For example, <em>blob:limit=1k</em> is the same
 as <em>blob:limit=1024</em>.</p></div>
+<div class="paragraph"><p>The form <em>--filter=object:type=(tag|commit|tree|blob)</em> omits all objects
+which are not of the requested type.</p></div>
 <div class="paragraph"><p>The form <em>--filter=sparse:oid=&lt;blob-ish&gt;</em> uses a sparse-checkout
 specification contained in the blob (or blob-expression) <em>&lt;blob-ish&gt;</em>
-to omit blobs that would not be not required for a sparse checkout on
+to omit blobs that would not be required for a sparse checkout on
 the requested refs.</p></div>
 <div class="paragraph"><p>The form <em>--filter=tree:&lt;depth&gt;</em> omits all blobs and trees whose depth
 from the root tree is &gt;= &lt;depth&gt; (minimum depth if an object is located
@@ -2109,6 +2186,16 @@ equivalent.</p></div>
 <dd>
 <p>
         Turn off any previous <code>--filter=</code> argument.
+</p>
+</dd>
+<dt class="hdlist1">
+--filter-provided-objects
+</dt>
+<dd>
+<p>
+        Filter the list of explicitly provided objects, which would otherwise
+        always be printed even if they did not match any of the filters. Only
+        useful with <code>--filter=</code>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2238,14 +2325,16 @@ people using 80-column terminals.</p></div>
 </dt>
 <dd>
 <p>
-        The commit objects record the encoding used for the log message
+        Commit objects record the character encoding used for the log message
         in their encoding header; this option can be used to tell the
         command to re-code the commit log message in the encoding
         preferred by the user.  For non plumbing commands this
         defaults to UTF-8. Note that if an object claims to be encoded
         in <code>X</code> and we are outputting in <code>X</code>, we will output the object
         verbatim; this means that invalid sequences in the original
-        commit may be copied to the output.
+        commit may be copied to the output. Likewise, if iconv(3) fails
+        to convert the commit, we will quietly output the original
+        object verbatim.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2347,7 +2436,7 @@ omitted.</p></div>
 1970).  As with <code>--raw</code>, this is always in UTC and therefore <code>-local</code>
 has no effect.</p></div>
 <div class="paragraph"><p><code>--date=format:...</code> feeds the format <code>...</code> to your system <code>strftime</code>,
-except for %z and %Z, which are handled internally.
+except for %s, %z, and %Z, which are handled internally.
 Use <code>--date=format:%c</code> to show the date in your system locale&#8217;s
 preferred format.  See the <code>strftime</code> manual for a complete list of
 format placeholders. When using <code>-local</code>, the correct syntax is
@@ -2375,6 +2464,24 @@ the time zone is omitted when the local time zone is used
 <p>
         Print the contents of the commit in raw-format; each record is
         separated with a NUL character.
+</p>
+</dd>
+<dt class="hdlist1">
+--no-commit-header
+</dt>
+<dd>
+<p>
+        Suppress the header line containing "commit" and the object ID printed before
+        the specified format.  This has no effect on the built-in formats; only custom
+        formats are affected.
+</p>
+</dd>
+<dt class="hdlist1">
+--commit-header
+</dt>
+<dd>
+<p>
+        Overrides a previous <code>--no-commit-header</code>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2505,7 +2612,7 @@ built-in formats:</p></div>
 </p>
 <div class="literalblock">
 <div class="content">
-<pre><code>&lt;hash&gt; &lt;title line&gt;</code></pre>
+<pre><code>&lt;hash&gt; &lt;title-line&gt;</code></pre>
 </div></div>
 <div class="paragraph"><p>This is designed to be as compact as possible.</p></div>
 </li>
@@ -2520,7 +2627,7 @@ Author: &lt;author&gt;</code></pre>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>&lt;title line&gt;</code></pre>
+<pre><code>&lt;title-line&gt;</code></pre>
 </div></div>
 </li>
 <li>
@@ -2531,15 +2638,15 @@ Author: &lt;author&gt;</code></pre>
 <div class="content">
 <pre><code>commit &lt;hash&gt;
 Author: &lt;author&gt;
-Date:   &lt;author date&gt;</code></pre>
+Date:   &lt;author-date&gt;</code></pre>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>&lt;title line&gt;</code></pre>
+<pre><code>&lt;title-line&gt;</code></pre>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>&lt;full commit message&gt;</code></pre>
+<pre><code>&lt;full-commit-message&gt;</code></pre>
 </div></div>
 </li>
 <li>
@@ -2554,11 +2661,11 @@ Commit: &lt;committer&gt;</code></pre>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>&lt;title line&gt;</code></pre>
+<pre><code>&lt;title-line&gt;</code></pre>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>&lt;full commit message&gt;</code></pre>
+<pre><code>&lt;full-commit-message&gt;</code></pre>
 </div></div>
 </li>
 <li>
@@ -2569,17 +2676,17 @@ Commit: &lt;committer&gt;</code></pre>
 <div class="content">
 <pre><code>commit &lt;hash&gt;
 Author:     &lt;author&gt;
-AuthorDate: &lt;author date&gt;
+AuthorDate: &lt;author-date&gt;
 Commit:     &lt;committer&gt;
-CommitDate: &lt;committer date&gt;</code></pre>
+CommitDate: &lt;committer-date&gt;</code></pre>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>&lt;title line&gt;</code></pre>
+<pre><code>&lt;title-line&gt;</code></pre>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>&lt;full commit message&gt;</code></pre>
+<pre><code>&lt;full-commit-message&gt;</code></pre>
 </div></div>
 </li>
 <li>
@@ -2588,7 +2695,7 @@ CommitDate: &lt;committer date&gt;</code></pre>
 </p>
 <div class="literalblock">
 <div class="content">
-<pre><code>&lt;abbrev hash&gt; (&lt;title line&gt;, &lt;short author date&gt;)</code></pre>
+<pre><code>&lt;abbrev-hash&gt; (&lt;title-line&gt;, &lt;short-author-date&gt;)</code></pre>
 </div></div>
 <div class="paragraph"><p>This format is used to refer to another commit in a commit message and
 is the same as <code>--pretty='format:%C(auto)%h (%s, %ad)'</code>.  By default,
@@ -2605,12 +2712,12 @@ placeholders, its output is not affected by other options like
 <div class="content">
 <pre><code>From &lt;hash&gt; &lt;date&gt;
 From: &lt;author&gt;
-Date: &lt;author date&gt;
-Subject: [PATCH] &lt;title line&gt;</code></pre>
+Date: &lt;author-date&gt;
+Subject: [PATCH] &lt;title-line&gt;</code></pre>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>&lt;full commit message&gt;</code></pre>
+<pre><code>&lt;full-commit-message&gt;</code></pre>
 </div></div>
 </li>
 <li>
@@ -2637,9 +2744,9 @@ use <code>--no-abbrev</code>.</p></div>
 </li>
 <li>
 <p>
-<em>format:&lt;string&gt;</em>
+<em>format:&lt;format-string&gt;</em>
 </p>
-<div class="paragraph"><p>The <em>format:&lt;string&gt;</em> format allows you to specify which information
+<div class="paragraph"><p>The <em>format:&lt;format-string&gt;</em> format allows you to specify which information
 you want to show. It works a little bit like printf format,
 with the notable exception that you get a newline with <em>%n</em>
 instead of <em>\n</em>.</p></div>
@@ -2976,6 +3083,15 @@ author date, short format (<code>YYYY-MM-DD</code>)
 </p>
 </dd>
 <dt class="hdlist1">
+<em>%ah</em>
+</dt>
+<dd>
+<p>
+author date, human style (like the <code>--date=human</code> option of
+        <a href="git-rev-list.html">git-rev-list(1)</a>)
+</p>
+</dd>
+<dt class="hdlist1">
 <em>%cn</em>
 </dt>
 <dd>
@@ -3083,6 +3199,15 @@ committer date, short format (<code>YYYY-MM-DD</code>)
 </p>
 </dd>
 <dt class="hdlist1">
+<em>%ch</em>
+</dt>
+<dd>
+<p>
+committer date, human style (like the <code>--date=human</code> option of
+        <a href="git-rev-list.html">git-rev-list(1)</a>)
+</p>
+</dd>
+<dt class="hdlist1">
 <em>%d</em>
 </dt>
 <dd>
@@ -3097,6 +3222,48 @@ ref names, like the --decorate option of <a href="git-log.html">git-log(1)</a>
 <p>
 ref names without the " (", ")" wrapping.
 </p>
+</dd>
+<dt class="hdlist1">
+<em>%(describe[:options])</em>
+</dt>
+<dd>
+<p>
+human-readable name, like
+                          <a href="git-describe.html">git-describe(1)</a>; empty string for
+                          undescribable commits.  The <code>describe</code> string
+                          may be followed by a colon and zero or more
+                          comma-separated options.  Descriptions can be
+                          inconsistent when tags are added or removed at
+                          the same time.
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+<em>tags[=&lt;bool-value&gt;]</em>: Instead of only considering annotated tags,
+   consider lightweight tags as well.
+</p>
+</li>
+<li>
+<p>
+<em>abbrev=&lt;number&gt;</em>: Instead of using the default number of hexadecimal digits
+   (which will vary according to the number of objects in the repository with a
+   default of 7) of the abbreviated object name, use &lt;number&gt; digits, or as many
+   digits as needed to form a unique object name.
+</p>
+</li>
+<li>
+<p>
+<em>match=&lt;pattern&gt;</em>: Only consider tags matching the given
+   <code>glob(7)</code> pattern, excluding the "refs/tags/" prefix.
+</p>
+</li>
+<li>
+<p>
+<em>exclude=&lt;pattern&gt;</em>: Do not consider tags matching the given
+   <code>glob(7)</code> pattern, excluding the "refs/tags/" prefix.
+</p>
+</li>
+</ul></div>
 </dd>
 <dt class="hdlist1">
 <em>%S</em>
@@ -3286,16 +3453,12 @@ display the trailers of the body as
                           <code>trailers</code> string may be followed by a colon
                           and zero or more comma-separated options.
                           If any option is provided multiple times the
-                          last occurance wins.
+                          last occurrence wins.
 </p>
-<div class="paragraph"><p>The boolean options accept an optional value <code>[=&lt;BOOL&gt;]</code>. The values
-<code>true</code>, <code>false</code>, <code>on</code>, <code>off</code> etc. are all accepted. See the "boolean"
-sub-section in "EXAMPLES" in <a href="git-config.html">git-config(1)</a>. If a boolean
-option is given with no value, it&#8217;s enabled.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<em>key=&lt;K&gt;</em>: only show trailers with specified key. Matching is done
+<em>key=&lt;key&gt;</em>: only show trailers with specified &lt;key&gt;. Matching is done
    case-insensitively and trailing colon is optional. If option is
    given multiple times trailer lines matching any of the keys are
    shown. This option automatically enables the <code>only</code> option so that
@@ -3307,15 +3470,15 @@ option is given with no value, it&#8217;s enabled.</p></div>
 </li>
 <li>
 <p>
-<em>only[=&lt;BOOL&gt;]</em>: select whether non-trailer lines from the trailer
+<em>only[=&lt;bool&gt;]</em>: select whether non-trailer lines from the trailer
    block should be included.
 </p>
 </li>
 <li>
 <p>
-<em>separator=&lt;SEP&gt;</em>: specify a separator inserted between trailer
+<em>separator=&lt;sep&gt;</em>: specify a separator inserted between trailer
    lines. When this option is not given each trailer line is
-   terminated with a line feed character. The string SEP may contain
+   terminated with a line feed character. The string &lt;sep&gt; may contain
    the literal formatting codes described above. To use comma as
    separator one must use <code>%x2C</code> as it would otherwise be parsed as
    next option. E.g., <code>%(trailers:key=Ticket,separator=%x2C )</code>
@@ -3325,27 +3488,27 @@ option is given with no value, it&#8217;s enabled.</p></div>
 </li>
 <li>
 <p>
-<em>unfold[=&lt;BOOL&gt;]</em>: make it behave as if interpret-trailer&#8217;s <code>--unfold</code>
+<em>unfold[=&lt;bool&gt;]</em>: make it behave as if interpret-trailer&#8217;s <code>--unfold</code>
    option was given. E.g.,
    <code>%(trailers:only,unfold=true)</code> unfolds and shows all trailer lines.
 </p>
 </li>
 <li>
 <p>
-<em>keyonly[=&lt;BOOL&gt;]</em>: only show the key part of the trailer.
+<em>keyonly[=&lt;bool&gt;]</em>: only show the key part of the trailer.
 </p>
 </li>
 <li>
 <p>
-<em>valueonly[=&lt;BOOL&gt;]</em>: only show the value part of the trailer.
+<em>valueonly[=&lt;bool&gt;]</em>: only show the value part of the trailer.
 </p>
 </li>
 <li>
 <p>
-<em>key_value_separator=&lt;SEP&gt;</em>: specify a separator inserted between
+<em>key_value_separator=&lt;sep&gt;</em>: specify a separator inserted between
    trailer lines. When this option is not given each trailer key-value
    pair is separated by ": ". Otherwise it shares the same semantics
-   as <em>separator=&lt;SEP&gt;</em> above.
+   as <em>separator=&lt;sep&gt;</em> above.
 </p>
 </li>
 </ul></div>
@@ -3368,6 +3531,10 @@ decoration format if <code>--decorate</code> was not already provided on the com
 line.</td>
 </tr></table>
 </div>
+<div class="paragraph"><p>The boolean options accept an optional value <code>[=&lt;bool-value&gt;]</code>. The values
+<code>true</code>, <code>false</code>, <code>on</code>, <code>off</code> etc. are all accepted. See the "boolean"
+sub-section in "EXAMPLES" in <a href="git-config.html">git-config(1)</a>. If a boolean
+option is given with no value, it&#8217;s enabled.</p></div>
 <div class="paragraph"><p>If you add a <code>+</code> (plus sign) after <em>%</em> of a placeholder, a line-feed
 is inserted immediately before the expansion if and only if the
 placeholder expands to a non-empty string.</p></div>
@@ -3414,6 +3581,133 @@ $ git log -2 --pretty=%h 4da45bef</code></pre>
 </div>
 </div>
 <div class="sect1">
+<h2 id="_examples">EXAMPLES</h2>
+<div class="sectionbody">
+<div class="ulist"><ul>
+<li>
+<p>
+Print the list of commits reachable from the current branch.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>git rev-list HEAD</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Print the list of commits on this branch, but not present in the
+  upstream branch.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>git rev-list @{upstream}..HEAD</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Format commits with their author and commit message (see also the
+  porcelain <a href="git-log.html">git-log(1)</a>).
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>git rev-list --format=medium HEAD</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Format commits along with their diffs (see also the porcelain
+  <a href="git-log.html">git-log(1)</a>, which can do this in a single process).
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>git rev-list HEAD |
+git diff-tree --stdin --format=medium -p</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Print the list of commits on the current branch that touched any
+  file in the <code>Documentation</code> directory.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>git rev-list HEAD -- Documentation/</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Print the list of commits authored by you in the past year, on
+  any branch, tag, or other ref.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>git rev-list --author=you@example.com --since=1.year.ago --all</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Print the list of objects reachable from the current branch (i.e., all
+  commits and the blobs and trees they contain).
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>git rev-list --objects HEAD</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Compare the disk size of all reachable objects, versus those
+  reachable from reflogs, versus the total packed size. This can tell
+  you whether running <code>git repack -ad</code> might reduce the repository size
+  (by dropping unreachable objects), and whether expiring reflogs might
+  help.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># reachable objects
+git rev-list --disk-usage --objects --all
+# plus reflogs
+git rev-list --disk-usage --objects --all --reflog
+# total disk size used
+du -c .git/objects/pack/*.pack .git/objects/??/*
+# alternative to du: add up "size" and "size-pack" fields
+git count-objects -v</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Report the disk size of each branch, not including objects used by the
+  current branch. This can find outliers that are contributing to a
+  bloated repository size (e.g., because somebody accidentally committed
+  large build artifacts).
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>git for-each-ref --format='%(refname)' |
+while read branch
+do
+        size=$(git rev-list --disk-usage --objects HEAD..$branch)
+        echo "$size $branch"
+done |
+sort -n</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Compare the on-disk size of branches in one group of refs, excluding
+  another. If you co-mingle objects from multiple remotes in a single
+  repository, this can show which remotes are contributing to the
+  repository size (taking the size of <code>origin</code> as a baseline).
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>git rev-list --disk-usage --objects --remotes=$suspect --not --remotes=origin</code></pre>
+</div></div>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_git">GIT</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Part of the <a href="git.html">git(1)</a> suite</p></div>
@@ -3424,7 +3718,7 @@ $ git log -2 --pretty=%h 4da45bef</code></pre>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-07-30 14:18:13 PDT
+ 2022-10-29 03:53:56 JST
 </div>
 </div>
 </body>

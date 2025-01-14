@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 9.0.0rc2" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>Trace2 API</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -743,7 +743,7 @@ asciidoc.install();
 information to stderr or a file.  The Trace2 feature is inactive unless
 explicitly enabled by enabling one or more Trace2 Targets.</p></div>
 <div class="paragraph"><p>The Trace2 API is intended to replace the existing (Trace1)
-printf-style tracing provided by the existing <code>GIT_TRACE</code> and
+<code>printf()</code>-style tracing provided by the existing <code>GIT_TRACE</code> and
 <code>GIT_TRACE_PERFORMANCE</code> facilities.  During initial implementation,
 Trace2 and Trace1 may operate in parallel.</p></div>
 <div class="paragraph"><p>The Trace2 API defines a set of high-level messages with known fields,
@@ -758,8 +758,8 @@ formats in the future.  This might be used to define a binary format,
 for example.</p></div>
 <div class="paragraph"><p>Trace2 is controlled using <code>trace2.*</code> config values in the system and
 global config files and <code>GIT_TRACE2*</code> environment variables.  Trace2 does
-not read from repo local or worktree config files or respect <code>-c</code>
-command line config settings.</p></div>
+not read from repo local or worktree config files, nor does it respect
+<code>-c</code> command line config settings.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -769,8 +769,8 @@ command line config settings.</p></div>
 Format details are given in a later section.</p></div>
 <div class="sect2">
 <h3 id="_the_normal_format_target">The Normal Format Target</h3>
-<div class="paragraph"><p>The normal format target is a tradition printf format and similar
-to GIT_TRACE format.  This format is enabled with the <code>GIT_TRACE2</code>
+<div class="paragraph"><p>The normal format target is a traditional <code>printf()</code> format and similar
+to the <code>GIT_TRACE</code> format.  This format is enabled with the <code>GIT_TRACE2</code>
 environment variable or the <code>trace2.normalTarget</code> system or global
 config setting.</p></div>
 <div class="paragraph"><p>For example</p></div>
@@ -801,8 +801,8 @@ git version 2.20.1.155.g426c96fcdb</code></pre>
 <div class="sect2">
 <h3 id="_the_performance_format_target">The Performance Format Target</h3>
 <div class="paragraph"><p>The performance format target (PERF) is a column-based format to
-replace GIT_TRACE_PERFORMANCE and is suitable for development and
-testing, possibly to complement tools like gprof.  This format is
+replace <code>GIT_TRACE_PERFORMANCE</code> and is suitable for development and
+testing, possibly to complement tools like <code>gprof</code>.  This format is
 enabled with the <code>GIT_TRACE2_PERF</code> environment variable or the
 <code>trace2.perfTarget</code> system or global config setting.</p></div>
 <div class="paragraph"><p>For example</p></div>
@@ -854,7 +854,7 @@ git version 2.20.1.155.g426c96fcdb</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre><code>$ cat ~/log.event
-{"event":"version","sid":"sid":"20190408T191610.507018Z-H9b68c35f-P000059a8","thread":"main","time":"2019-01-16T17:28:42.620713Z","file":"common-main.c","line":38,"evt":"2","exe":"2.20.1.155.g426c96fcdb"}
+{"event":"version","sid":"20190408T191610.507018Z-H9b68c35f-P000059a8","thread":"main","time":"2019-01-16T17:28:42.620713Z","file":"common-main.c","line":38,"evt":"3","exe":"2.20.1.155.g426c96fcdb"}
 {"event":"start","sid":"20190408T191610.507018Z-H9b68c35f-P000059a8","thread":"main","time":"2019-01-16T17:28:42.621027Z","file":"common-main.c","line":39,"t_abs":0.001173,"argv":["git","version"]}
 {"event":"cmd_name","sid":"20190408T191610.507018Z-H9b68c35f-P000059a8","thread":"main","time":"2019-01-16T17:28:42.621122Z","file":"git.c","line":432,"name":"version","hierarchy":"version"}
 {"event":"exit","sid":"20190408T191610.507018Z-H9b68c35f-P000059a8","thread":"main","time":"2019-01-16T17:28:42.621236Z","file":"git.c","line":662,"t_abs":0.001227,"code":0}
@@ -909,69 +909,23 @@ filename collisions).</p></div>
 <div class="sect1">
 <h2 id="_trace2_api">Trace2 API</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>All public Trace2 functions and macros are defined in <code>trace2.h</code> and
-<code>trace2.c</code>.  All public symbols are prefixed with <code>trace2_</code>.</p></div>
+<div class="paragraph"><p>The Trace2 public API is defined and documented in <code>trace2.h</code>; refer to it for
+more information.  All public functions and macros are prefixed
+with <code>trace2_</code> and are implemented in <code>trace2.c</code>.</p></div>
 <div class="paragraph"><p>There are no public Trace2 data structures.</p></div>
 <div class="paragraph"><p>The Trace2 code also defines a set of private functions and data types
 in the <code>trace2/</code> directory.  These symbols are prefixed with <code>tr2_</code>
-and should only be used by functions in <code>trace2.c</code>.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_conventions_for_public_functions_and_macros">Conventions for Public Functions and Macros</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>The functions defined by the Trace2 API are declared and documented
-in <code>trace2.h</code>.  It defines the API functions and wrapper macros for
-Trace2.</p></div>
+and should only be used by functions in <code>trace2.c</code> (or other private
+source files in <code>trace2/</code>).</p></div>
+<div class="sect2">
+<h3 id="_conventions_for_public_functions_and_macros">Conventions for Public Functions and Macros</h3>
 <div class="paragraph"><p>Some functions have a <code>_fl()</code> suffix to indicate that they take <code>file</code>
 and <code>line-number</code> arguments.</p></div>
 <div class="paragraph"><p>Some functions have a <code>_va_fl()</code> suffix to indicate that they also
 take a <code>va_list</code> argument.</p></div>
 <div class="paragraph"><p>Some functions have a <code>_printf_fl()</code> suffix to indicate that they also
-take a varargs argument.</p></div>
-<div class="paragraph"><p>There are CPP wrapper macros and ifdefs to hide most of these details.
-See <code>trace2.h</code> for more details.  The following discussion will only
-describe the simplified forms.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_public_api">Public API</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>All Trace2 API functions send a message to all of the active
-Trace2 Targets.  This section describes the set of available
-messages.</p></div>
-<div class="paragraph"><p>It helps to divide these functions into groups for discussion
-purposes.</p></div>
-<div class="sect2">
-<h3 id="_basic_command_messages">Basic Command Messages</h3>
-<div class="paragraph"><p>These are concerned with the lifetime of the overall git process.
-e.g: <code>void trace2_initialize_clock()</code>, <code>void trace2_initialize()</code>,
-<code>int trace2_is_enabled()</code>, <code>void trace2_cmd_start(int argc, const char **argv)</code>.</p></div>
-</div>
-<div class="sect2">
-<h3 id="_command_detail_messages">Command Detail Messages</h3>
-<div class="paragraph"><p>These are concerned with describing the specific Git command
-after the command line, config, and environment are inspected.
-e.g: <code>void trace2_cmd_name(const char *name)</code>,
-<code>void trace2_cmd_mode(const char *mode)</code>.</p></div>
-</div>
-<div class="sect2">
-<h3 id="_child_process_messages">Child Process Messages</h3>
-<div class="paragraph"><p>These are concerned with the various spawned child processes,
-including shell scripts, git commands, editors, pagers, and hooks.</p></div>
-<div class="paragraph"><p>e.g: <code>void trace2_child_start(struct child_process *cmd)</code>.</p></div>
-</div>
-<div class="sect2">
-<h3 id="_git_thread_messages">Git Thread Messages</h3>
-<div class="paragraph"><p>These messages are concerned with Git thread usage.</p></div>
-<div class="paragraph"><p>e.g: <code>void trace2_thread_start(const char *thread_name)</code>.</p></div>
-</div>
-<div class="sect2">
-<h3 id="_region_and_data_messages">Region and Data Messages</h3>
-<div class="paragraph"><p>These are concerned with recording performance data
-over regions or spans of code. e.g:
-<code>void trace2_region_enter(const char *category, const char *label, const struct repository *repo)</code>.</p></div>
-<div class="paragraph"><p>Refer to trace2.h for details about all trace2 functions.</p></div>
+take a <code>printf()</code> style format with a variable number of arguments.</p></div>
+<div class="paragraph"><p>CPP wrapper macros are defined to hide most of these details.</p></div>
 </div>
 </div>
 </div>
@@ -999,7 +953,7 @@ over regions or spans of code. e.g:
 </dt>
 <dd>
 <p>
-        is a free-form printf message intended for human consumption.
+        is a free-form <code>printf()</code> message intended for human consumption.
 </p>
 <div class="paragraph"><p>Note that this may contain embedded LF or CRLF characters that are
 not escaped, so the event may spill across multiple lines.</p></div>
@@ -1103,7 +1057,7 @@ This field is in anticipation of in-proc submodules in the future.</p></div>
 </dt>
 <dd>
 <p>
-        is a free-form printf message intended for human consumption.
+        is a free-form <code>printf()</code> message intended for human consumption.
 </p>
 </dd>
 </dl></div>
@@ -1235,13 +1189,13 @@ only present on the "start" and "atexit" events.</p></div>
 <pre><code>{
         "event":"version",
         ...
-        "evt":"2",                     # EVENT format version
+        "evt":"3",                     # EVENT format version
         "exe":"2.20.1.155.g426c96fcdb" # git version
 }</code></pre>
 </div></div>
 </dd>
 <dt class="hdlist1">
-<code>"discard"</code>
+<code>"too_many_files"</code>
 </dt>
 <dd>
 <p>
@@ -1252,7 +1206,7 @@ only present on the "start" and "atexit" events.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><code>{
-        "event":"discard",
+        "event":"too_many_files",
         ...
 }</code></pre>
 </div></div>
@@ -1337,8 +1291,8 @@ completed.)</p></div>
 </dt>
 <dd>
 <p>
-        This event is emitted when one of the <code>error()</code>, <code>die()</code>,
-        <code>warning()</code>, or <code>usage()</code> functions are called.
+        This event is emitted when one of the <code>BUG()</code>, <code>bug()</code>, <code>error()</code>,
+        <code>die()</code>, <code>warning()</code>, or <code>usage()</code> functions are called.
 </p>
 <div class="listingblock">
 <div class="content">
@@ -1367,6 +1321,25 @@ about specific error arguments.</p></div>
         "event":"cmd_path",
         ...
         "path":"C:/work/gfw/git.exe"
+}</code></pre>
+</div></div>
+</dd>
+<dt class="hdlist1">
+<code>"cmd_ancestry"</code>
+</dt>
+<dd>
+<p>
+        This event contains the text command name for the parent (and earlier
+        generations of parents) of the current process, in an array ordered from
+        nearest parent to furthest great-grandparent. It may not be implemented
+        on all platforms.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>{
+        "event":"cmd_ancestry",
+        ...
+        "ancestry":["bash","tmux: server","systemd"]
 }</code></pre>
 </div></div>
 </dd>
@@ -1404,7 +1377,7 @@ these special values are used:</p></div>
 </dt>
 <dd>
 <p>
-        This event, when present, describes the command variant This
+        This event, when present, describes the command variant. This
         event may be emitted more than once.
 </p>
 <div class="listingblock">
@@ -1471,7 +1444,7 @@ with "?".</p></div>
 <dd>
 <p>
         This event is generated after the current process has returned
-        from the waitpid() and collected the exit information from the
+        from the <code>waitpid()</code> and collected the exit information from the
         child.
 </p>
 <div class="listingblock">
@@ -1491,9 +1464,50 @@ a hint for post-processing.  (But it is only a hint because the child
 process may be a shell script which doesn&#8217;t have a session-id.)</p></div>
 <div class="paragraph"><p>Note that the <code>t_rel</code> field contains the observed run time in seconds
 for the child process (starting before the fork/exec/spawn and
-stopping after the waitpid() and includes OS process creation overhead).
+stopping after the <code>waitpid()</code> and includes OS process creation overhead).
 So this time will be slightly larger than the atexit time reported by
 the child process itself.</p></div>
+</dd>
+<dt class="hdlist1">
+<code>"child_ready"</code>
+</dt>
+<dd>
+<p>
+        This event is generated after the current process has started
+        a background process and released all handles to it.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>{
+        "event":"child_ready",
+        ...
+        "child_id":2,
+        "pid":14708,     # child PID
+        "ready":"ready", # child ready state
+        "t_rel":0.110605 # observed run-time of child process
+}</code></pre>
+</div></div>
+<div class="paragraph"><p>Note that the session-id of the child process is not available to
+the current/spawning process, so the child&#8217;s PID is reported here as
+a hint for post-processing.  (But it is only a hint because the child
+process may be a shell script which doesn&#8217;t have a session-id.)</p></div>
+<div class="paragraph"><p>This event is generated after the child is started in the background
+and given a little time to boot up and start working.  If the child
+starts up normally while the parent is still waiting, the "ready"
+field will have the value "ready".
+If the child is too slow to start and the parent times out, the field
+will have the value "timeout".
+If the child starts but the parent is unable to probe it, the field
+will have the value "error".</p></div>
+<div class="paragraph"><p>After the parent process emits this event, it will release all of its
+handles to the child process and treat the child as a background
+daemon.  So even if the child does eventually finish booting up,
+the parent will not emit an updated event.</p></div>
+<div class="paragraph"><p>Note that the <code>t_rel</code> field contains the observed run time in seconds
+when the parent released the child process into the background.
+The child is assumed to be a long-running daemon process and may
+outlive the parent process.  So the parent&#8217;s child event times should
+not be compared to the child&#8217;s atexit times.</p></div>
 </dd>
 <dt class="hdlist1">
 <code>"exec"</code>
@@ -1540,8 +1554,8 @@ the child process itself.</p></div>
 <dd>
 <p>
         This event is generated when a thread is started.  It is
-        generated from <strong>within</strong> the new thread&#8217;s thread-proc (for TLS
-        reasons).
+        generated from <strong>within</strong> the new thread&#8217;s thread-proc (because
+        it needs to access data in the thread&#8217;s thread-local storage).
 </p>
 <div class="listingblock">
 <div class="content">
@@ -1558,7 +1572,7 @@ the child process itself.</p></div>
 <dd>
 <p>
         This event is generated when a thread exits.  It is generated
-        from <strong>within</strong> the thread&#8217;s thread-proc (for TLS reasons).
+        from <strong>within</strong> the thread&#8217;s thread-proc.
 </p>
 <div class="listingblock">
 <div class="content">
@@ -1583,6 +1597,7 @@ the child process itself.</p></div>
 <pre><code>{
         "event":"def_param",
         ...
+        "scope":"global",
         "param":"core.abbrev",
         "value":"7"
 }</code></pre>
@@ -1699,6 +1714,92 @@ filter deeply nested regions and data events.  It defaults to "2".</p></div>
         "category":"process",
         "key":"windows/ancestry",
         "value":["bash.exe","bash.exe"]
+}</code></pre>
+</div></div>
+</dd>
+<dt class="hdlist1">
+<code>"th_timer"</code>
+</dt>
+<dd>
+<p>
+        This event logs the amount of time that a stopwatch timer was
+        running in the thread.  This event is generated when a thread
+        exits for timers that requested per-thread events.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>{
+        "event":"th_timer",
+        ...
+        "category":"my_category",
+        "name":"my_timer",
+        "intervals":5,         # number of time it was started/stopped
+        "t_total":0.052741,    # total time in seconds it was running
+        "t_min":0.010061,      # shortest interval
+        "t_max":0.011648       # longest interval
+}</code></pre>
+</div></div>
+</dd>
+<dt class="hdlist1">
+<code>"timer"</code>
+</dt>
+<dd>
+<p>
+        This event logs the amount of time that a stopwatch timer was
+        running aggregated across all threads.  This event is generated
+        when the process exits.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>{
+        "event":"timer",
+        ...
+        "category":"my_category",
+        "name":"my_timer",
+        "intervals":5,         # number of time it was started/stopped
+        "t_total":0.052741,    # total time in seconds it was running
+        "t_min":0.010061,      # shortest interval
+        "t_max":0.011648       # longest interval
+}</code></pre>
+</div></div>
+</dd>
+<dt class="hdlist1">
+<code>"th_counter"</code>
+</dt>
+<dd>
+<p>
+        This event logs the value of a counter variable in a thread.
+        This event is generated when a thread exits for counters that
+        requested per-thread events.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>{
+        "event":"th_counter",
+        ...
+        "category":"my_category",
+        "name":"my_counter",
+        "count":23
+}</code></pre>
+</div></div>
+</dd>
+<dt class="hdlist1">
+<code>"counter"</code>
+</dt>
+<dd>
+<p>
+        This event logs the value of a counter variable across all threads.
+        This event is generated when the process exits.  The total value
+        reported here is the sum across all threads.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>{
+        "event":"counter",
+        ...
+        "category":"my_category",
+        "name":"my_counter",
+        "count":23
 }</code></pre>
 </div></div>
 </dd>
@@ -1855,7 +1956,7 @@ Regions
 </dt>
 <dd>
 <p>
-        Regions can be use to time an interesting section of code.
+        Regions can be used to time an interesting section of code.
 </p>
 <div class="listingblock">
 <div class="content">
@@ -2012,9 +2113,9 @@ Thread Events
 <p>
         Thread messages added to a thread-proc.
 </p>
-<div class="paragraph"><p>For example, the multithreaded preload-index code can be
+<div class="paragraph"><p>For example, the multi-threaded preload-index code can be
 instrumented with a region around the thread pool and then
-per-thread start and exit events within the threadproc.</p></div>
+per-thread start and exit events within the thread-proc.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><code>static void *preload_thread(void *_data)
@@ -2110,7 +2211,104 @@ the index.  Thread "th01" worked on 508 items at offset 0.  Thread "th02"
 worked on 508 items at offset 2032.  Thread "th04" worked on 508 items
 at offset 508.</p></div>
 <div class="paragraph"><p>This example also shows that thread names are assigned in a racy manner
-as each thread starts and allocates TLS storage.</p></div>
+as each thread starts.</p></div>
+</dd>
+<dt class="hdlist1">
+Config (def param) Events
+</dt>
+<dd>
+<p>
+          Dump "interesting" config values to trace2 log.
+</p>
+<div class="paragraph"><p>We can optionally emit configuration events, see
+<code>trace2.configparams</code> in <a href="../git-config.html">git-config(1)</a> for how to enable
+it.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ git config --system color.ui never
+$ git config --global color.ui always
+$ git config --local color.ui auto
+$ git config --list --show-scope | grep 'color.ui'
+system  color.ui=never
+global  color.ui=always
+local   color.ui=auto</code></pre>
+</div></div>
+<div class="paragraph"><p>Then, mark the config <code>color.ui</code> as "interesting" config with
+<code>GIT_TRACE2_CONFIG_PARAMS</code>:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ export GIT_TRACE2_PERF_BRIEF=1
+$ export GIT_TRACE2_PERF=~/log.perf
+$ export GIT_TRACE2_CONFIG_PARAMS=color.ui
+$ git version
+...
+$ cat ~/log.perf
+d0 | main                     | version      |     |           |           |              | ...
+d0 | main                     | start        |     |  0.001642 |           |              | /usr/local/bin/git version
+d0 | main                     | cmd_name     |     |           |           |              | version (version)
+d0 | main                     | def_param    |     |           |           | scope:system | color.ui:never
+d0 | main                     | def_param    |     |           |           | scope:global | color.ui:always
+d0 | main                     | def_param    |     |           |           | scope:local  | color.ui:auto
+d0 | main                     | data         | r0  |  0.002100 |  0.002100 | fsync        | fsync/writeout-only:0
+d0 | main                     | data         | r0  |  0.002126 |  0.002126 | fsync        | fsync/hardware-flush:0
+d0 | main                     | exit         |     |  0.000470 |           |              | code:0
+d0 | main                     | atexit       |     |  0.000477 |           |              | code:0</code></pre>
+</div></div>
+</dd>
+<dt class="hdlist1">
+Stopwatch Timer Events
+</dt>
+<dd>
+<p>
+        Measure the time spent in a function call or span of code
+        that might be called from many places within the code
+        throughout the life of the process.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>static void expensive_function(void)
+{
+        trace2_timer_start(TRACE2_TIMER_ID_TEST1);
+        ...
+        sleep_millisec(1000); // Do something expensive
+        ...
+        trace2_timer_stop(TRACE2_TIMER_ID_TEST1);
+}
+
+static int ut_100timer(int argc, const char **argv)
+{
+        ...
+
+        expensive_function();
+
+        // Do something else 1...
+
+        expensive_function();
+
+        // Do something else 2...
+
+        expensive_function();
+
+        return 0;
+}</code></pre>
+</div></div>
+<div class="paragraph"><p>In this example, we measure the total time spent in
+<code>expensive_function()</code> regardless of when it is called
+in the overall flow of the program.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ export GIT_TRACE2_PERF_BRIEF=1
+$ export GIT_TRACE2_PERF=~/log.perf
+$ t/helper/test-tool trace2 100timer 3 1000
+...
+$ cat ~/log.perf
+d0 | main                     | version      |     |           |           |              | ...
+d0 | main                     | start        |     |  0.001453 |           |              | t/helper/test-tool trace2 100timer 3 1000
+d0 | main                     | cmd_name     |     |           |           |              | trace2 (trace2)
+d0 | main                     | exit         |     |  3.003667 |           |              | code:0
+d0 | main                     | timer        |     |           |           | test         | name:test1 intervals:3 total:3.001686 min:1.000254 max:1.000929
+d0 | main                     | atexit       |     |  3.003796 |           |              | code:0</code></pre>
+</div></div>
 </dd>
 </dl></div>
 </div>
@@ -2125,17 +2323,17 @@ switch to Trace2.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Updating existing tests that assume GIT_TRACE format messages.
+Updating existing tests that assume <code>GIT_TRACE</code> format messages.
 </p>
 </li>
 <li>
 <p>
-How to best handle custom GIT_TRACE_&lt;key&gt; messages?
+How to best handle custom <code>GIT_TRACE_&lt;key&gt;</code> messages?
 </p>
 <div class="ulist"><ul>
 <li>
 <p>
-The GIT_TRACE_&lt;key&gt; mechanism allows each &lt;key&gt; to write to a
+The <code>GIT_TRACE_&lt;key&gt;</code> mechanism allows each &lt;key&gt; to write to a
 different file (in addition to just stderr).
 </p>
 </li>
@@ -2156,7 +2354,7 @@ Trace2 targets (and convert &lt;key&gt; to a "category").
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-12-08 16:10:07 PST
+ 2022-11-05 13:49:36 JST
 </div>
 </div>
 </body>

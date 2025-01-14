@@ -63,7 +63,7 @@ $(list_tool_variants)"
 					preamble=
 				fi
 				shown_any=yes
-				printf "%s%s\n" "$per_line_prefix" "$toolname"
+				printf "%s%-15s  %s\n" "$per_line_prefix" "$toolname" $(diff_mode && diff_cmd_help "$toolname" || merge_cmd_help "$toolname")
 			fi
 		done
 
@@ -162,8 +162,20 @@ setup_tool () {
 		return 1
 	}
 
+	diff_cmd_help () {
+		return 0
+	}
+
 	merge_cmd () {
 		return 1
+	}
+
+	merge_cmd_help () {
+		return 0
+	}
+
+	hide_resolved_enabled () {
+		return 0
 	}
 
 	translate_merge_tool_path () {
@@ -250,6 +262,10 @@ trust_exit_code () {
 	fi
 }
 
+initialize_merge_tool () {
+	# Bring tool-specific functions into scope
+	setup_tool "$1" || return 1
+}
 
 # Entry point for running tools
 run_merge_tool () {
@@ -260,9 +276,6 @@ run_merge_tool () {
 
 	merge_tool_path=$(get_merge_tool_path "$1") || exit
 	base_present="$2"
-
-	# Bring tool-specific functions into scope
-	setup_tool "$1" || return 1
 
 	if merge_mode
 	then

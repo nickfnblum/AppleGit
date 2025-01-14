@@ -4,6 +4,13 @@ Git Howto Index
 Here is a collection of mailing list postings made by various
 people describing how they use Git in their workflow.
 
+* link:howto/coordinate-embargoed-releases.html[coordinate-embargoed-releases] 
+
+When a vulnerability is reported, we follow these guidelines to
+assess the vulnerability, create and review a fix, and coordinate embargoed
+security releases.
+
+
 * link:howto/keep-canonical-history-correct.html[keep-canonical-history-correct] by Junio C Hamano <gitster@pobox.com>
 
 This how-to explains a method for keeping a

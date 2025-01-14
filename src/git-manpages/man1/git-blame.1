@@ -2,12 +2,12 @@
 .\"     Title: git-blame
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-BLAME" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-BLAME" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,8 +35,8 @@ git-blame \- Show what revision and author last modified each line of a file
 \fIgit blame\fR [\-c] [\-b] [\-l] [\-\-root] [\-t] [\-f] [\-n] [\-s] [\-e] [\-p] [\-w] [\-\-incremental]
             [\-L <range>] [\-S <revs\-file>] [\-M] [\-C] [\-C] [\-C] [\-\-since=<date>]
             [\-\-ignore\-rev <rev>] [\-\-ignore\-revs\-file <file>]
-            [\-\-progress] [\-\-abbrev=<n>] [<rev> | \-\-contents <file> | \-\-reverse <rev>\&.\&.<rev>]
-            [\-\-] <file>
+            [\-\-color\-lines] [\-\-color\-by\-age] [\-\-progress] [\-\-abbrev=<n>]
+            [<rev> | \-\-contents <file> | \-\-reverse <rev>\&.\&.<rev>] [\-\-] <file>
 .fi
 .sp
 .SH "DESCRIPTION"
@@ -68,7 +68,7 @@ ea4c7f9bf69e781dd0cd88d2bccb2bf5cc15c9a7 git\-blame: Make the output
 \-b
 .RS 4
 Show blank SHA\-1 for boundary commits\&. This can also be controlled via the
-\fBblame\&.blankboundary\fR
+\fBblame\&.blankBoundary\fR
 config option\&.
 .RE
 .PP
@@ -305,6 +305,20 @@ config option\&. An empty file name,
 \fB""\fR, will clear the list of revs from previously processed files\&.
 .RE
 .PP
+\-\-color\-lines
+.RS 4
+Color line annotations in the default format differently if they come from the same commit as the preceding line\&. This makes it easier to distinguish code blocks introduced by different commits\&. The color defaults to cyan and can be adjusted using the
+\fBcolor\&.blame\&.repeatedLines\fR
+config option\&.
+.RE
+.PP
+\-\-color\-by\-age
+.RS 4
+Color line annotations depending on the age of the line in the default format\&. The
+\fBcolor\&.blame\&.highlightRecent\fR
+config option controls what color is used for each range of age\&.
+.RE
+.PP
 \-h
 .RS 4
 Show help message\&.
@@ -357,6 +371,48 @@ Ignore whitespace when comparing the parent\(cqs version and the child\(cqs to f
 .RS 4
 Instead of using the default 7+1 hexadecimal digits as the abbreviated object name, use <m>+1 digits, where <m> is at least <n> but ensures the commit object names are unique\&. Note that 1 column is used for a caret to mark the boundary commit\&.
 .RE
+.SH "THE DEFAULT FORMAT"
+.sp
+When neither \fB\-\-porcelain\fR nor \fB\-\-incremental\fR option is specified, \fBgit blame\fR will output annotation for each line with:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+abbreviated object name for the commit the line came from;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+author ident (by default author name and date, unless
+\fB\-s\fR
+or
+\fB\-e\fR
+is specified); and
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+line number
+.RE
+.sp
+before the line contents\&.
 .SH "THE PORCELAIN FORMAT"
 .sp
 In this format, each line is output after a header; the header at the minimum has the first line which has:
@@ -605,6 +661,70 @@ For people who do parsing: to make it more robust, just ignore any lines between
 .SH "MAPPING AUTHORS"
 .sp
 See \fBgitmailmap\fR(5)\&.
+.SH "CONFIGURATION"
+.sp
+Everything below this line in this section is selectively included from the \fBgit-config\fR(1) documentation\&. The content is the same as what\(cqs found there:
+.PP
+blame\&.blankBoundary
+.RS 4
+Show blank commit object name for boundary commits in
+\fBgit-blame\fR(1)\&. This option defaults to false\&.
+.RE
+.PP
+blame\&.coloring
+.RS 4
+This determines the coloring scheme to be applied to blame output\&. It can be
+\fIrepeatedLines\fR,
+\fIhighlightRecent\fR, or
+\fInone\fR
+which is the default\&.
+.RE
+.PP
+blame\&.date
+.RS 4
+Specifies the format used to output dates in
+\fBgit-blame\fR(1)\&. If unset the iso format is used\&. For supported values, see the discussion of the
+\fB\-\-date\fR
+option at
+\fBgit-log\fR(1)\&.
+.RE
+.PP
+blame\&.showEmail
+.RS 4
+Show the author email instead of author name in
+\fBgit-blame\fR(1)\&. This option defaults to false\&.
+.RE
+.PP
+blame\&.showRoot
+.RS 4
+Do not treat root commits as boundaries in
+\fBgit-blame\fR(1)\&. This option defaults to false\&.
+.RE
+.PP
+blame\&.ignoreRevsFile
+.RS 4
+Ignore revisions listed in the file, one unabbreviated object name per line, in
+\fBgit-blame\fR(1)\&. Whitespace and comments beginning with
+\fB#\fR
+are ignored\&. This option may be repeated multiple times\&. Empty file names will reset the list of ignored revisions\&. This option will be handled before the command line option
+\fB\-\-ignore\-revs\-file\fR\&.
+.RE
+.PP
+blame\&.markUnblamableLines
+.RS 4
+Mark lines that were changed by an ignored revision that we could not attribute to another commit with a
+\fI*\fR
+in the output of
+\fBgit-blame\fR(1)\&.
+.RE
+.PP
+blame\&.markIgnoredLines
+.RS 4
+Mark lines that were changed by an ignored revision that we attributed to another commit with a
+\fI?\fR
+in the output of
+\fBgit-blame\fR(1)\&.
+.RE
 .SH "SEE ALSO"
 .sp
 \fBgit-annotate\fR(1)

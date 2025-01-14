@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 9.0.0rc2" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>git-annotate(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -749,7 +749,7 @@ git-annotate(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>git annotate</em> [&lt;options&gt;] &lt;file&gt; [&lt;revision&gt;]</pre>
+<pre class="content"><em>git annotate</em> [&lt;options&gt;] [&lt;rev-opts&gt;] [&lt;rev&gt;] [--] &lt;file&gt;</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -775,7 +775,7 @@ familiar command name for people coming from other SCM systems.</p></div>
 <dd>
 <p>
         Show blank SHA-1 for boundary commits.  This can also
-        be controlled via the <code>blame.blankboundary</code> config option.
+        be controlled via the <code>blame.blankBoundary</code> config option.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1043,6 +1043,27 @@ take effect.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+--color-lines
+</dt>
+<dd>
+<p>
+        Color line annotations in the default format differently if they come from
+        the same commit as the preceding line. This makes it easier to distinguish
+        code blocks introduced by different commits. The color defaults to cyan and
+        can be adjusted using the <code>color.blame.repeatedLines</code> config option.
+</p>
+</dd>
+<dt class="hdlist1">
+--color-by-age
+</dt>
+<dd>
+<p>
+        Color line annotations depending on the age of the line in the default format.
+        The <code>color.blame.highlightRecent</code> config option controls what color is used for
+        each range of age.
+</p>
+</dd>
+<dt class="hdlist1">
 -h
 </dt>
 <dd>
@@ -1070,7 +1091,7 @@ take effect.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-03-10 08:03:13 PDT
+ 2022-10-29 03:53:56 JST
 </div>
 </div>
 </body>

@@ -29,7 +29,7 @@
 # Copyright (c) 2008 Clemens Buchacher <drizzd@aon.at>
 #
 
-if test -n "$NO_CURL"
+if ! test_have_prereq LIBCURL
 then
 	skip_all='skipping test, git built without http support'
 	test_done
@@ -65,7 +65,8 @@ done
 for DEFAULT_HTTPD_MODULE_PATH in '/usr/libexec/apache2' \
 				 '/usr/lib/apache2/modules' \
 				 '/usr/lib64/httpd/modules' \
-				 '/usr/lib/httpd/modules'
+				 '/usr/lib/httpd/modules' \
+				 '/usr/libexec/httpd'
 do
 	if test -d "$DEFAULT_HTTPD_MODULE_PATH"
 	then
@@ -98,16 +99,19 @@ then
 fi
 
 HTTPD_VERSION=$($LIB_HTTPD_PATH -v | \
-	sed -n 's/^Server version: Apache\/\([0-9]*\)\..*$/\1/p; q')
+	sed -n 's/^Server version: Apache\/\([0-9.]*\).*$/\1/p; q')
+HTTPD_VERSION_MAJOR=$(echo $HTTPD_VERSION | cut -d. -f1)
+HTTPD_VERSION_MINOR=$(echo $HTTPD_VERSION | cut -d. -f2)
 
-if test -n "$HTTPD_VERSION"
+if test -n "$HTTPD_VERSION_MAJOR"
 then
 	if test -z "$LIB_HTTPD_MODULE_PATH"
 	then
-		if ! test $HTTPD_VERSION -ge 2
+		if ! test "$HTTPD_VERSION_MAJOR" -eq 2 ||
+		   ! test "$HTTPD_VERSION_MINOR" -ge 4
 		then
 			test_skip_or_die GIT_TEST_HTTPD \
-				"at least Apache version 2 is required"
+				"at least Apache version 2.4 is required"
 		fi
 		if ! test -d "$DEFAULT_HTTPD_MODULE_PATH"
 		then
@@ -131,6 +135,7 @@ prepare_httpd() {
 	cp "$TEST_PATH"/passwd "$HTTPD_ROOT_PATH"
 	install_script incomplete-length-upload-pack-v2-http.sh
 	install_script incomplete-body-upload-pack-v2-http.sh
+	install_script error-no-report.sh
 	install_script broken-smart-http.sh
 	install_script error-smart-http.sh
 	install_script error.sh
@@ -171,6 +176,11 @@ prepare_httpd() {
 			export LIB_HTTPD_SVN LIB_HTTPD_SVNPATH
 		fi
 	fi
+}
+
+enable_http2 () {
+	HTTPD_PARA="$HTTPD_PARA -DHTTP2"
+	test_set_prereq HTTP2
 }
 
 start_httpd() {
@@ -273,11 +283,11 @@ expect_askpass() {
 		none)
 			;;
 		pass)
-			echo "askpass: Password for 'http://$2@$dest': "
+			echo "askpass: Password for '$HTTPD_PROTO://$2@$dest': "
 			;;
 		both)
-			echo "askpass: Username for 'http://$dest': "
-			echo "askpass: Password for 'http://$2@$dest': "
+			echo "askpass: Username for '$HTTPD_PROTO://$dest': "
+			echo "askpass: Password for '$HTTPD_PROTO://$2@$dest': "
 			;;
 		*)
 			false

@@ -2,12 +2,12 @@
 .\"     Title: git
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,11 +32,11 @@ git \- the stupid content tracker
 .SH "SYNOPSIS"
 .sp
 .nf
-\fIgit\fR [\-\-version] [\-\-help] [\-C <path>] [\-c <name>=<value>]
+\fIgit\fR [\-v | \-\-version] [\-h | \-\-help] [\-C <path>] [\-c <name>=<value>]
     [\-\-exec\-path[=<path>]] [\-\-html\-path] [\-\-man\-path] [\-\-info\-path]
     [\-p|\-\-paginate|\-P|\-\-no\-pager] [\-\-no\-replace\-objects] [\-\-bare]
     [\-\-git\-dir=<path>] [\-\-work\-tree=<path>] [\-\-namespace=<name>]
-    [\-\-super\-prefix=<path>] [\-\-config\-env <name>=<envvar>]
+    [\-\-super\-prefix=<path>] [\-\-config\-env=<name>=<envvar>]
     <command> [<args>]
 .fi
 .sp
@@ -51,14 +51,23 @@ After you mastered the basic concepts, you can come back to this page to learn w
 A formatted and hyperlinked copy of the latest Git documentation can be viewed at \m[blue]\fBhttps://git\&.github\&.io/htmldocs/git\&.html\fR\m[] or \m[blue]\fBhttps://git\-scm\&.com/docs\fR\m[]\&.
 .SH "OPTIONS"
 .PP
-\-\-version
+\-v, \-\-version
 .RS 4
 Prints the Git suite version that the
 \fIgit\fR
 program came from\&.
+.sp
+This option is internally converted to
+\fBgit version \&.\&.\&.\fR
+and accepts the same options as the
+\fBgit-version\fR(1)
+command\&. If
+\fB\-\-help\fR
+is also given, it takes precedence over
+\fB\-\-version\fR\&.
 .RE
 .PP
-\-\-help
+\-h, \-\-help
 .RS 4
 Prints the synopsis and a list of the most commonly used commands\&. If the option
 \fB\-\-all\fR
@@ -142,7 +151,9 @@ there is no shortcut for directly setting the value to an empty string, instead 
 \fB<envvar>\fR
 does not exist in the environment\&.
 \fB<envvar>\fR
-may not contain an equals sign to avoid ambiguity with `<name>`s which contain one\&.
+may not contain an equals sign to avoid ambiguity with
+\fB<name>\fR
+containing one\&.
 .sp
 This is useful for cases where you want to pass transitory configuration options to git, but are doing so on OS\(cqs where other processes might be able to read your cmdline (e\&.g\&.
 \fB/proc/self/cmdline\fR), but not your environ (e\&.g\&.
@@ -478,7 +489,7 @@ Show various types of objects\&.
 .PP
 \fBgit-sparse-checkout\fR(1)
 .RS 4
-Initialize and modify the sparse\-checkout\&.
+Reduce your working tree to a subset of tracked files\&.
 .RE
 .PP
 \fBgit-stash\fR(1)
@@ -514,6 +525,11 @@ Manage multiple working trees\&.
 \fBgitk\fR(1)
 .RS 4
 The Git repository browser\&.
+.RE
+.PP
+\fBscalar\fR(1)
+.RS 4
+A tool for managing large Git repositories\&.
 .RE
 .SS "Ancillary Commands"
 .sp
@@ -596,6 +612,11 @@ Collect information for user to file a bug report\&.
 Count unpacked number of objects and their disk consumption\&.
 .RE
 .PP
+\fBgit-diagnose\fR(1)
+.RS 4
+Generate a zip archive of diagnostic information\&.
+.RE
+.PP
 \fBgit-difftool\fR(1)
 .RS 4
 Show changes using common diff tools\&.
@@ -618,7 +639,7 @@ Instantly browse your working repository in gitweb\&.
 .PP
 \fBgit-merge-tree\fR(1)
 .RS 4
-Show three\-way merge without touching index\&.
+Perform merge without touching index or working tree\&.
 .RE
 .PP
 \fBgit-rerere\fR(1)
@@ -639,6 +660,11 @@ Check the GPG signature of commits\&.
 \fBgit-verify-tag\fR(1)
 .RS 4
 Check the GPG signature of tags\&.
+.RE
+.PP
+\fBgit-version\fR(1)
+.RS 4
+Display version information about Git\&.
 .RE
 .PP
 \fBgit-whatchanged\fR(1)
@@ -1064,6 +1090,11 @@ Helper to store credentials on disk\&.
 Produce a merge commit message\&.
 .RE
 .PP
+\fBgit-hook\fR(1)
+.RS 4
+Run git hooks\&.
+.RE
+.PP
 \fBgit-interpret-trailers\fR(1)
 .RS 4
 Add or parse structured information in commit messages\&.
@@ -1107,16 +1138,6 @@ Remove unnecessary whitespace\&.
 .sp
 The following documentation pages are guides about Git concepts\&.
 .PP
-\fBgitattributes\fR(5)
-.RS 4
-Defining attributes per path\&.
-.RE
-.PP
-\fBgitcli\fR(7)
-.RS 4
-Git command\-line interface and conventions\&.
-.RE
-.PP
 \fBgitcore-tutorial\fR(7)
 .RS 4
 A Git core tutorial for developers\&.
@@ -1152,26 +1173,6 @@ Frequently asked questions about using Git\&.
 A Git Glossary\&.
 .RE
 .PP
-\fBgithooks\fR(5)
-.RS 4
-Hooks used by Git\&.
-.RE
-.PP
-\fBgitignore\fR(5)
-.RS 4
-Specifies intentionally untracked files to ignore\&.
-.RE
-.PP
-\fBgitmailmap\fR(5)
-.RS 4
-Map author/committer names and/or E\-Mail addresses\&.
-.RE
-.PP
-\fBgitmodules\fR(5)
-.RS 4
-Defining submodule properties\&.
-.RE
-.PP
 \fBgitnamespaces\fR(7)
 .RS 4
 Git namespaces\&.
@@ -1180,16 +1181,6 @@ Git namespaces\&.
 \fBgitremote-helpers\fR(7)
 .RS 4
 Helper programs to interact with remote repositories\&.
-.RE
-.PP
-\fBgitrepository-layout\fR(5)
-.RS 4
-Git Repository Layout\&.
-.RE
-.PP
-\fBgitrevisions\fR(7)
-.RS 4
-Specifying revisions and ranges for Git\&.
 .RE
 .PP
 \fBgitsubmodules\fR(7)
@@ -1210,6 +1201,107 @@ A tutorial introduction to Git: part two\&.
 \fBgitworkflows\fR(7)
 .RS 4
 An overview of recommended workflows with Git\&.
+.RE
+.SH "REPOSITORY, COMMAND AND FILE INTERFACES"
+.sp
+This documentation discusses repository and command interfaces which users are expected to interact with directly\&. See \fB\-\-user\-formats\fR in \fBgit-help\fR(1) for more details on the criteria\&.
+.PP
+\fBgitattributes\fR(5)
+.RS 4
+Defining attributes per path\&.
+.RE
+.PP
+\fBgitcli\fR(7)
+.RS 4
+Git command\-line interface and conventions\&.
+.RE
+.PP
+\fBgithooks\fR(5)
+.RS 4
+Hooks used by Git\&.
+.RE
+.PP
+\fBgitignore\fR(5)
+.RS 4
+Specifies intentionally untracked files to ignore\&.
+.RE
+.PP
+\fBgitmailmap\fR(5)
+.RS 4
+Map author/committer names and/or E\-Mail addresses\&.
+.RE
+.PP
+\fBgitmodules\fR(5)
+.RS 4
+Defining submodule properties\&.
+.RE
+.PP
+\fBgitrepository-layout\fR(5)
+.RS 4
+Git Repository Layout\&.
+.RE
+.PP
+\fBgitrevisions\fR(7)
+.RS 4
+Specifying revisions and ranges for Git\&.
+.RE
+.SH "FILE FORMATS, PROTOCOLS AND OTHER DEVELOPER INTERFACES"
+.sp
+This documentation discusses file formats, over\-the\-wire protocols and other git developer interfaces\&. See \fB\-\-developer\-interfaces\fR in \fBgit-help\fR(1)\&.
+.PP
+\fBgitformat-bundle\fR(5)
+.RS 4
+The bundle file format\&.
+.RE
+.PP
+\fBgitformat-chunk\fR(5)
+.RS 4
+Chunk\-based file formats\&.
+.RE
+.PP
+\fBgitformat-commit-graph\fR(5)
+.RS 4
+Git commit\-graph format\&.
+.RE
+.PP
+\fBgitformat-index\fR(5)
+.RS 4
+Git index format\&.
+.RE
+.PP
+\fBgitformat-pack\fR(5)
+.RS 4
+Git pack format\&.
+.RE
+.PP
+\fBgitformat-signature\fR(5)
+.RS 4
+Git cryptographic signature formats\&.
+.RE
+.PP
+\fBgitprotocol-capabilities\fR(5)
+.RS 4
+Protocol v0 and v1 capabilities\&.
+.RE
+.PP
+\fBgitprotocol-common\fR(5)
+.RS 4
+Things common to various protocols\&.
+.RE
+.PP
+\fBgitprotocol-http\fR(5)
+.RS 4
+Git HTTP\-based protocols\&.
+.RE
+.PP
+\fBgitprotocol-pack\fR(5)
+.RS 4
+How packs are transferred over\-the\-wire\&.
+.RE
+.PP
+\fBgitprotocol-v2\fR(5)
+.RS 4
+Git Wire Protocol, Version 2\&.
 .RE
 .SH "CONFIGURATION MECHANISM"
 .sp
@@ -1326,21 +1418,23 @@ Higher level SCMs may provide and manage additional information in the \fB$GIT_D
 Please see \fBgitglossary\fR(7)\&.
 .SH "ENVIRONMENT VARIABLES"
 .sp
-Various Git commands use the following environment variables:
+Various Git commands pay attention to environment variables and change their behavior\&. The environment variables marked as "Boolean" take their values the same way as Boolean valued configuration variables, e\&.g\&. "true", "yes", "on" and positive numbers are taken as "yes"\&.
+.sp
+Here are the variables:
 .SS "The Git Repository"
 .sp
 These environment variables apply to \fIall\fR core Git commands\&. Nb: it is worth noting that they may be used/overridden by SCMS sitting above Git so take care if using a foreign front\-end\&.
 .PP
 \fBGIT_INDEX_FILE\fR
 .RS 4
-This environment allows the specification of an alternate index file\&. If not specified, the default of
+This environment variable specifies an alternate index file\&. If not specified, the default of
 \fB$GIT_DIR/index\fR
 is used\&.
 .RE
 .PP
 \fBGIT_INDEX_VERSION\fR
 .RS 4
-This environment variable allows the specification of an index version for new repositories\&. It won\(cqt affect existing index files\&. By default index file version 2 or 3 is used\&. See
+This environment variable specifies what index version is used when writing the index file out\&. It won\(cqt affect existing index files\&. By default index file version 2 or 3 is used\&. See
 \fBgit-update-index\fR(1)
 for more information\&.
 .RE
@@ -1401,7 +1495,7 @@ This should be a colon\-separated list of absolute paths\&. If set, it is a list
 .PP
 \fBGIT_DISCOVERY_ACROSS_FILESYSTEM\fR
 .RS 4
-When run in a directory that does not have "\&.git" repository directory, Git tries to find such a directory in the parent directories to find the top of the working tree, but by default it does not cross filesystem boundaries\&. This environment variable can be set to true to tell Git not to stop at filesystem boundaries\&. Like
+When run in a directory that does not have "\&.git" repository directory, Git tries to find such a directory in the parent directories to find the top of the working tree, but by default it does not cross filesystem boundaries\&. This Boolean environment variable can be set to true to tell Git not to stop at filesystem boundaries\&. Like
 \fBGIT_CEILING_DIRECTORIES\fR, this will not affect an explicit repository directory set via
 \fBGIT_DIR\fR
 or on the command line\&.
@@ -1636,6 +1730,11 @@ refer to OpenSSH, plink or tortoiseplink\&. This variable overrides the config s
 that serves the same purpose\&.
 .RE
 .PP
+\fBGIT_SSL_NO_VERIFY\fR
+.RS 4
+Setting and exporting this environment variable to any value tells Git not to verify the SSL certificate when fetching or pushing over HTTPS\&.
+.RE
+.PP
 \fBGIT_ASKPASS\fR
 .RS 4
 If this environment variable is set, then Git commands which need to acquire passwords or passphrases (e\&.g\&. for HTTP or IMAP authentication) will call this program with a suitable prompt as command\-line argument and read the password from its STDOUT\&. See also the
@@ -1646,19 +1745,34 @@ option in
 .PP
 \fBGIT_TERMINAL_PROMPT\fR
 .RS 4
-If this environment variable is set to
-\fB0\fR, git will not prompt on the terminal (e\&.g\&., when asking for HTTP authentication)\&.
+If this Boolean environment variable is set to false, git will not prompt on the terminal (e\&.g\&., when asking for HTTP authentication)\&.
+.RE
+.PP
+\fBGIT_CONFIG_GLOBAL\fR, \fBGIT_CONFIG_SYSTEM\fR
+.RS 4
+Take the configuration from the given files instead from global or system\-level configuration files\&. If
+\fBGIT_CONFIG_SYSTEM\fR
+is set, the system config file defined at build time (usually
+\fB/etc/gitconfig\fR) will not be read\&. Likewise, if
+\fBGIT_CONFIG_GLOBAL\fR
+is set, neither
+\fB$HOME/\&.gitconfig\fR
+nor
+\fB$XDG_CONFIG_HOME/git/config\fR
+will be read\&. Can be set to
+\fB/dev/null\fR
+to skip reading configuration files of the respective level\&.
 .RE
 .PP
 \fBGIT_CONFIG_NOSYSTEM\fR
 .RS 4
 Whether to skip reading settings from the system\-wide
 \fB$(prefix)/etc/gitconfig\fR
-file\&. This environment variable can be used along with
+file\&. This Boolean environment variable can be used along with
 \fB$HOME\fR
 and
 \fB$XDG_CONFIG_HOME\fR
-to create a predictable environment for a picky script, or you can set it temporarily to avoid using a buggy
+to create a predictable environment for a picky script, or you can set it to true to temporarily avoid using a buggy
 \fB/etc/gitconfig\fR
 file while waiting for someone with sufficient permissions to fix it\&.
 .RE
@@ -1814,16 +1928,12 @@ for full details\&.
 .PP
 \fBGIT_TRACE_REDACT\fR
 .RS 4
-By default, when tracing is activated, Git redacts the values of cookies, the "Authorization:" header, and the "Proxy\-Authorization:" header\&. Set this variable to
-\fB0\fR
-to prevent this redaction\&.
+By default, when tracing is activated, Git redacts the values of cookies, the "Authorization:" header, the "Proxy\-Authorization:" header and packfile URIs\&. Set this Boolean environment variable to false to prevent this redaction\&.
 .RE
 .PP
 \fBGIT_LITERAL_PATHSPECS\fR
 .RS 4
-Setting this variable to
-\fB1\fR
-will cause Git to treat all pathspecs literally, rather than as glob patterns\&. For example, running
+Setting this Boolean environment variable to true will cause Git to treat all pathspecs literally, rather than as glob patterns\&. For example, running
 \fBGIT_LITERAL_PATHSPECS=1 git log \-\- \(aq*\&.c\(aq\fR
 will search for commits that touch the path
 \fB*\&.c\fR, not any paths that the glob
@@ -1836,23 +1946,17 @@ diff output, etc)\&.
 .PP
 \fBGIT_GLOB_PATHSPECS\fR
 .RS 4
-Setting this variable to
-\fB1\fR
-will cause Git to treat all pathspecs as glob patterns (aka "glob" magic)\&.
+Setting this Boolean environment variable to true will cause Git to treat all pathspecs as glob patterns (aka "glob" magic)\&.
 .RE
 .PP
 \fBGIT_NOGLOB_PATHSPECS\fR
 .RS 4
-Setting this variable to
-\fB1\fR
-will cause Git to treat all pathspecs as literal (aka "literal" magic)\&.
+Setting this Boolean environment variable to true will cause Git to treat all pathspecs as literal (aka "literal" magic)\&.
 .RE
 .PP
 \fBGIT_ICASE_PATHSPECS\fR
 .RS 4
-Setting this variable to
-\fB1\fR
-will cause Git to treat all pathspecs as case\-insensitive\&.
+Setting this Boolean environment variable to true will cause Git to treat all pathspecs as case\-insensitive\&.
 .RE
 .PP
 \fBGIT_REFLOG_ACTION\fR
@@ -1864,9 +1968,11 @@ to set its name to this variable when it is invoked as the top level command by 
 .PP
 \fBGIT_REF_PARANOIA\fR
 .RS 4
-If set to
-\fB1\fR, include broken or badly named refs when iterating over lists of refs\&. In a normal, non\-corrupted repository, this does nothing\&. However, enabling it may help git to detect and abort some operations in the presence of broken refs\&. Git sets this variable automatically when performing destructive operations like
-\fBgit-prune\fR(1)\&. You should not need to set it yourself unless you want to be paranoid about making sure an operation has touched every ref (e\&.g\&., because you are cloning a repository to make a backup)\&.
+If this Boolean environment variable is set to false, ignore broken or badly named refs when iterating over lists of refs\&. Normally Git will try to include any such refs, which may cause some operations to fail\&. This is usually preferable, as potentially destructive operations (e\&.g\&.,
+\fBgit-prune\fR(1)) are better off aborting rather than ignoring broken refs (and thus considering the history they point to as not worth saving)\&. The default value is
+\fB1\fR
+(i\&.e\&., be paranoid about detecting and aborting all operations)\&. You should not normally need to set this to
+\fB0\fR, but it may be useful when trying to salvage data from a corrupted repository\&.
 .RE
 .PP
 \fBGIT_ALLOW_PROTOCOL\fR
@@ -1878,7 +1984,7 @@ is set to
 \fBprotocol\&.<name>\&.allow\fR
 set to
 \fBalways\fR
-(overriding any existing configuration)\&. In other words, any protocol not mentioned will be disallowed (i\&.e\&., this is a whitelist, not a blacklist)\&. See the description of
+(overriding any existing configuration)\&. See the description of
 \fBprotocol\&.allow\fR
 in
 \fBgit-config\fR(1)
@@ -1887,7 +1993,7 @@ for more details\&.
 .PP
 \fBGIT_PROTOCOL_FROM_USER\fR
 .RS 4
-Set to 0 to prevent protocols used by fetch/push/clone which are configured to the
+Set this Boolean environment variable to false to prevent protocols used by fetch/push/clone which are configured to the
 \fBuser\fR
 state\&. This is useful to restrict recursive submodule initialization from an untrusted repository or for programs which feed potentially\-untrusted URLS to git commands\&. See
 \fBgit-config\fR(1)
@@ -1900,12 +2006,22 @@ For internal use only\&. Used in handshaking the wire protocol\&. Contains a col
 \fI:\fR
 separated list of keys with optional values
 \fIkey[=value]\fR\&. Presence of unknown keys and values must be ignored\&.
+.sp
+Note that servers may need to be configured to allow this variable to pass over some transports\&. It will be propagated automatically when accessing local repositories (i\&.e\&.,
+\fBfile://\fR
+or a filesystem path), as well as over the
+\fBgit://\fR
+protocol\&. For git\-over\-http, it should work automatically in most configurations, but see the discussion in
+\fBgit-http-backend\fR(1)\&. For git\-over\-ssh, the ssh server may need to be configured to allow clients to pass this variable (e\&.g\&., by using
+\fBAcceptEnv GIT_PROTOCOL\fR
+with OpenSSH)\&.
+.sp
+This configuration is optional\&. If the variable is not propagated, then clients will fall back to the original "v0" protocol (but may miss out on some performance improvements or features)\&. This variable currently only affects clones and fetches; it is not yet used for pushes (but may be in the future)\&.
 .RE
 .PP
 \fBGIT_OPTIONAL_LOCKS\fR
 .RS 4
-If set to
-\fB0\fR, Git will complete any requested operation without performing any optional sub\-operations that require taking a lock\&. For example, this will prevent
+If this Boolean environment variable is set to false, Git will complete any requested operation without performing any optional sub\-operations that require taking a lock\&. For example, this will prevent
 \fBgit status\fR
 from refreshing the index as a side effect\&. This is useful for processes running in the background which do not want to cause lock contention with other operations on the repository\&. Defaults to
 \fB1\fR\&.

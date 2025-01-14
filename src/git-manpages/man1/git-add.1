@@ -2,12 +2,12 @@
 .\"     Title: git-add
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-ADD" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-ADD" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,7 @@ git-add \- Add file contents to the index
 .sp
 .nf
 \fIgit add\fR [\-\-verbose | \-v] [\-\-dry\-run | \-n] [\-\-force | \-f] [\-\-interactive | \-i] [\-\-patch | \-p]
-          [\-\-edit | \-e] [\-\-[no\-]all | \-\-[no\-]ignore\-removal | [\-\-update | \-u]]
+          [\-\-edit | \-e] [\-\-[no\-]all | \-\-[no\-]ignore\-removal | [\-\-update | \-u]] [\-\-sparse]
           [\-\-intent\-to\-add | \-N] [\-\-refresh] [\-\-ignore\-errors] [\-\-ignore\-missing] [\-\-renormalize]
           [\-\-chmod=(+|\-)x] [\-\-pathspec\-from\-file=<file> [\-\-pathspec\-file\-nul]]
           [\-\-] [<pathspec>\&...]
@@ -93,6 +93,15 @@ Be verbose\&.
 \-f, \-\-force
 .RS 4
 Allow adding otherwise ignored files\&.
+.RE
+.PP
+\-\-sparse
+.RS 4
+Allow updating index entries outside of the sparse\-checkout cone\&. Normally,
+\fBgit add\fR
+refuses to update index entries whose paths do not fit within the sparse\-checkout cone, since those files might be removed from the working tree without warning\&. See
+\fBgit-sparse-checkout\fR(1)
+for more details\&.
 .RE
 .PP
 \-i, \-\-interactive
@@ -184,7 +193,7 @@ Apply the "clean" process freshly to all tracked files to forcibly add them agai
 configuration or the
 \fBtext\fR
 attribute in order to correct files added with wrong CRLF/LF line endings\&. This option implies
-\fB\-u\fR\&.
+\fB\-u\fR\&. Lone CR characters are untouched, thus while a CRLF cleans to LF, a CRCRLF sequence is only partially cleaned to CRLF\&.
 .RE
 .PP
 \-\-chmod=(+|\-)x
@@ -490,6 +499,32 @@ deleting context or removal lines
 .IP \(bu 2.3
 .\}
 modifying the contents of context or removal lines
+.RE
+.SH "CONFIGURATION"
+.sp
+Everything below this line in this section is selectively included from the \fBgit-config\fR(1) documentation\&. The content is the same as what\(cqs found there:
+.PP
+add\&.ignoreErrors, add\&.ignore\-errors (deprecated)
+.RS 4
+Tells
+\fIgit add\fR
+to continue adding files when some files cannot be added due to indexing errors\&. Equivalent to the
+\fB\-\-ignore\-errors\fR
+option of
+\fBgit-add\fR(1)\&.
+\fBadd\&.ignore\-errors\fR
+is deprecated, as it does not follow the usual naming convention for configuration variables\&.
+.RE
+.PP
+add\&.interactive\&.useBuiltin
+.RS 4
+Set to
+\fBfalse\fR
+to fall back to the original Perl implementation of the interactive version of
+\fBgit-add\fR(1)
+instead of the built\-in version\&. Is
+\fBtrue\fR
+by default\&.
 .RE
 .SH "SEE ALSO"
 .sp

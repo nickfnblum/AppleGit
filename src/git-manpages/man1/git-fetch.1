@@ -2,12 +2,12 @@
 .\"     Title: git-fetch
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-FETCH" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-FETCH" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -120,7 +120,24 @@ The argument to this option may be a glob on ref names, a ref, or the (possibly 
 .sp
 See also the
 \fBfetch\&.negotiationAlgorithm\fR
-configuration variable documented in
+and
+\fBpush\&.negotiate\fR
+configuration variables documented in
+\fBgit-config\fR(1), and the
+\fB\-\-negotiate\-only\fR
+option below\&.
+.RE
+.PP
+\-\-negotiate\-only
+.RS 4
+Do not fetch anything from the server, and instead print the ancestors of the provided
+\fB\-\-negotiation\-tip=*\fR
+arguments, which we have in common with the server\&.
+.sp
+This is incompatible with
+\fB\-\-recurse\-submodules=[yes|on\-demand]\fR\&. Internally this is used to implement the
+\fBpush\&.negotiate\fR
+option, see
 \fBgit-config\fR(1)\&.
 .RE
 .PP
@@ -176,6 +193,16 @@ Write a commit\-graph after fetching\&. This overrides the config setting
 \fBfetch\&.writeCommitGraph\fR\&.
 .RE
 .PP
+\-\-prefetch
+.RS 4
+Modify the configured refspec to place all refs into the
+\fBrefs/prefetch/\fR
+namespace\&. See the
+\fBprefetch\fR
+task in
+\fBgit-maintenance\fR(1)\&.
+.RE
+.PP
 \-p, \-\-prune
 .RS 4
 Before fetching, remove any remote\-tracking references that no longer exist on the remote\&. Tags are not subject to pruning if they are fetched only because of the default tag auto\-following or due to a \-\-tags option\&. However, if tags are fetched due to an explicit refspec (either on the command line or in the remote configuration, for example if the remote was cloned with the \-\-mirror option), then they are also subject to pruning\&. Supplying
@@ -203,6 +230,13 @@ By default, tags that point at objects that are downloaded from the remote repos
 \fBgit-config\fR(1)\&.
 .RE
 .PP
+\-\-refetch
+.RS 4
+Instead of negotiating with the server to avoid transferring commits and associated objects that are already present locally, this option fetches all objects as a fresh clone would\&. Use this to reapply a partial clone filter from configuration or using
+\fB\-\-filter=\fR
+when the filter definition has changed\&. Automatic post\-fetch maintenance will perform object database pack consolidation to remove any duplicate objects\&.
+.RE
+.PP
 \-\-refmap=<refspec>
 .RS 4
 When fetching refs listed on the command line, use the specified refspec (can be given more than once) to map the refs to remote\-tracking branches, instead of the values of
@@ -224,17 +258,26 @@ into local tags with the same name), in addition to whatever else would otherwis
 .PP
 \-\-recurse\-submodules[=yes|on\-demand|no]
 .RS 4
-This option controls if and under what conditions new commits of populated submodules should be fetched too\&. It can be used as a boolean option to completely disable recursion when set to
-\fIno\fR
-or to unconditionally recurse into all populated submodules when set to
-\fIyes\fR, which is the default when this option is used without any value\&. Use
-\fIon\-demand\fR
-to only recurse into a populated submodule when the superproject retrieves a commit that updates the submodule\(cqs reference to a commit that isn\(cqt already in the local submodule clone\&. By default,
-\fIon\-demand\fR
-is used, unless
+This option controls if and under what conditions new commits of submodules should be fetched too\&. When recursing through submodules,
+\fBgit fetch\fR
+always attempts to fetch "changed" submodules, that is, a submodule that has commits that are referenced by a newly fetched superproject commit but are missing in the local submodule clone\&. A changed submodule can be fetched as long as it is present locally e\&.g\&. in
+\fB$GIT_DIR/modules/\fR
+(see
+\fBgitsubmodules\fR(7)); if the upstream adds a new submodule, that submodule cannot be fetched until it is cloned e\&.g\&. by
+\fBgit submodule update\fR\&.
+.sp
+When set to
+\fIon\-demand\fR, only changed submodules are fetched\&. When set to
+\fIyes\fR, all populated submodules are fetched and submodules that are both unpopulated and changed are fetched\&. When set to
+\fIno\fR, submodules are never fetched\&.
+.sp
+When unspecified, this uses the value of
 \fBfetch\&.recurseSubmodules\fR
-is set (see
-\fBgit-config\fR(1))\&.
+if it is set (see
+\fBgit-config\fR(1)), defaulting to
+\fIon\-demand\fR
+if unset\&. When this option is used without any value, it defaults to
+\fIyes\fR\&.
 .RE
 .PP
 \-j, \-\-jobs=<n>
@@ -721,7 +764,7 @@ You can choose to provide the name of a remote which you had previously configur
 .\}
 .nf
         [remote "<name>"]
-                url = <url>
+                url = <URL>
                 pushurl = <pushurl>
                 push = <refspec>
                 fetch = <refspec>
@@ -731,7 +774,7 @@ You can choose to provide the name of a remote which you had previously configur
 .\}
 .sp
 .sp
-The \fB<pushurl>\fR is used for pushes only\&. It is optional and defaults to \fB<url>\fR\&.
+The \fB<pushurl>\fR is used for pushes only\&. It is optional and defaults to \fB<URL>\fR\&.
 .SS "Named file in \fB$GIT_DIR/remotes\fR"
 .sp
 You can choose to provide the name of a file in \fB$GIT_DIR/remotes\fR\&. The URL in this file will be used to access the repository\&. The refspec in this file will be used as default when you do not provide a refspec on the command line\&. This file should have the following format:
@@ -758,14 +801,14 @@ You can choose to provide the name of a file in \fB$GIT_DIR/branches\fR\&. The U
 .RS 4
 .\}
 .nf
-        <url>#<head>
+        <URL>#<head>
 .fi
 .if n \{\
 .RE
 .\}
 .sp
 .sp
-\fB<url>\fR is required; \fB#<head>\fR is optional\&.
+\fB<URL>\fR is required; \fB#<head>\fR is optional\&.
 .sp
 Depending on the operation, git will use one of the following refspecs, if you don\(cqt provide one on the command line\&. \fB<branch>\fR is the name of this file in \fB$GIT_DIR/branches\fR and \fB<head>\fR defaults to \fBmaster\fR\&.
 .sp
@@ -894,7 +937,7 @@ $ git remote prune <name>
 .sp
 To prune references as part of your normal workflow without needing to remember to run that, set \fBfetch\&.prune\fR globally, or \fBremote\&.<name>\&.prune\fR per\-remote in the config\&. See \fBgit-config\fR(1)\&.
 .sp
-Here\(cqs where things get tricky and more specific\&. The pruning feature doesn\(cqt actually care about branches, instead it\(cqll prune local <\(-> remote\-references as a function of the refspec of the remote (see \fB<refspec>\fR and CONFIGURED REMOTE\-TRACKING BRANCHES above)\&.
+Here\(cqs where things get tricky and more specific\&. The pruning feature doesn\(cqt actually care about branches, instead it\(cqll prune local \(<-\(-> remote\-references as a function of the refspec of the remote (see \fB<refspec>\fR and CONFIGURED REMOTE\-TRACKING BRANCHES above)\&.
 .sp
 Therefore if the refspec for the remote includes e\&.g\&. \fBrefs/tags/*:refs/tags/*\fR, or you manually run e\&.g\&. \fBgit fetch \-\-prune <name> "refs/tags/*:refs/tags/*"\fR it won\(cqt be stale remote tracking branches that are deleted, but any local tag that doesn\(cqt exist on the remote\&.
 .sp
@@ -1148,9 +1191,150 @@ The victim sends "have" lines advertising the IDs of objects it has that are not
 .\}
 As in #1, the attacker chooses an object ID X to steal\&. The victim sends an object Y that the attacker already has, and the attacker falsely claims to have X and not Y, so the victim sends Y as a delta against X\&. The delta reveals regions of X that are similar to Y to the attacker\&.
 .RE
+.SH "CONFIGURATION"
+.sp
+Everything below this line in this section is selectively included from the \fBgit-config\fR(1) documentation\&. The content is the same as what\(cqs found there:
+.PP
+fetch\&.recurseSubmodules
+.RS 4
+This option controls whether
+\fBgit fetch\fR
+(and the underlying fetch in
+\fBgit pull\fR) will recursively fetch into populated submodules\&. This option can be set either to a boolean value or to
+\fIon\-demand\fR\&. Setting it to a boolean changes the behavior of fetch and pull to recurse unconditionally into submodules when set to true or to not recurse at all when set to false\&. When set to
+\fIon\-demand\fR, fetch and pull will only recurse into a populated submodule when its superproject retrieves a commit that updates the submodule\(cqs reference\&. Defaults to
+\fIon\-demand\fR, or to the value of
+\fIsubmodule\&.recurse\fR
+if set\&.
+.RE
+.PP
+fetch\&.fsckObjects
+.RS 4
+If it is set to true, git\-fetch\-pack will check all fetched objects\&. See
+\fBtransfer\&.fsckObjects\fR
+for what\(cqs checked\&. Defaults to false\&. If not set, the value of
+\fBtransfer\&.fsckObjects\fR
+is used instead\&.
+.RE
+.PP
+fetch\&.fsck\&.<msg\-id>
+.RS 4
+Acts like
+\fBfsck\&.<msg\-id>\fR, but is used by
+\fBgit-fetch-pack\fR(1)
+instead of
+\fBgit-fsck\fR(1)\&. See the
+\fBfsck\&.<msg\-id>\fR
+documentation for details\&.
+.RE
+.PP
+fetch\&.fsck\&.skipList
+.RS 4
+Acts like
+\fBfsck\&.skipList\fR, but is used by
+\fBgit-fetch-pack\fR(1)
+instead of
+\fBgit-fsck\fR(1)\&. See the
+\fBfsck\&.skipList\fR
+documentation for details\&.
+.RE
+.PP
+fetch\&.unpackLimit
+.RS 4
+If the number of objects fetched over the Git native transfer is below this limit, then the objects will be unpacked into loose object files\&. However if the number of received objects equals or exceeds this limit then the received pack will be stored as a pack, after adding any missing delta bases\&. Storing the pack from a push can make the push operation complete faster, especially on slow filesystems\&. If not set, the value of
+\fBtransfer\&.unpackLimit\fR
+is used instead\&.
+.RE
+.PP
+fetch\&.prune
+.RS 4
+If true, fetch will automatically behave as if the
+\fB\-\-prune\fR
+option was given on the command line\&. See also
+\fBremote\&.<name>\&.prune\fR
+and the PRUNING section of
+\fBgit-fetch\fR(1)\&.
+.RE
+.PP
+fetch\&.pruneTags
+.RS 4
+If true, fetch will automatically behave as if the
+\fBrefs/tags/*:refs/tags/*\fR
+refspec was provided when pruning, if not set already\&. This allows for setting both this option and
+\fBfetch\&.prune\fR
+to maintain a 1=1 mapping to upstream refs\&. See also
+\fBremote\&.<name>\&.pruneTags\fR
+and the PRUNING section of
+\fBgit-fetch\fR(1)\&.
+.RE
+.PP
+fetch\&.output
+.RS 4
+Control how ref update status is printed\&. Valid values are
+\fBfull\fR
+and
+\fBcompact\fR\&. Default value is
+\fBfull\fR\&. See section OUTPUT in
+\fBgit-fetch\fR(1)
+for detail\&.
+.RE
+.PP
+fetch\&.negotiationAlgorithm
+.RS 4
+Control how information about the commits in the local repository is sent when negotiating the contents of the packfile to be sent by the server\&. Set to "consecutive" to use an algorithm that walks over consecutive commits checking each one\&. Set to "skipping" to use an algorithm that skips commits in an effort to converge faster, but may result in a larger\-than\-necessary packfile; or set to "noop" to not send any information at all, which will almost certainly result in a larger\-than\-necessary packfile, but will skip the negotiation step\&. Set to "default" to override settings made previously and use the default behaviour\&. The default is normally "consecutive", but if
+\fBfeature\&.experimental\fR
+is true, then the default is "skipping"\&. Unknown values will cause
+\fIgit fetch\fR
+to error out\&.
+.sp
+See also the
+\fB\-\-negotiate\-only\fR
+and
+\fB\-\-negotiation\-tip\fR
+options to
+\fBgit-fetch\fR(1)\&.
+.RE
+.PP
+fetch\&.showForcedUpdates
+.RS 4
+Set to false to enable
+\fB\-\-no\-show\-forced\-updates\fR
+in
+\fBgit-fetch\fR(1)
+and
+\fBgit-pull\fR(1)
+commands\&. Defaults to true\&.
+.RE
+.PP
+fetch\&.parallel
+.RS 4
+Specifies the maximal number of fetch operations to be run in parallel at a time (submodules, or remotes when the
+\fB\-\-multiple\fR
+option of
+\fBgit-fetch\fR(1)
+is in effect)\&.
+.sp
+A value of 0 will give some reasonable default\&. If unset, it defaults to 1\&.
+.sp
+For submodules, this setting can be overridden using the
+\fBsubmodule\&.fetchJobs\fR
+config setting\&.
+.RE
+.PP
+fetch\&.writeCommitGraph
+.RS 4
+Set to true to write a commit\-graph after every
+\fBgit fetch\fR
+command that downloads a pack\-file from a remote\&. Using the
+\fB\-\-split\fR
+option, most executions will create a very small commit\-graph file on top of the existing commit\-graph file(s)\&. Occasionally, these files will merge and the write may take longer\&. Having an updated commit\-graph file helps performance of many Git commands, including
+\fBgit merge\-base\fR,
+\fBgit push \-f\fR, and
+\fBgit log \-\-graph\fR\&. Defaults to false\&.
+.RE
 .SH "BUGS"
 .sp
-Using \-\-recurse\-submodules can only fetch new commits in already checked out submodules right now\&. When e\&.g\&. upstream added a new submodule in the just fetched commits of the superproject the submodule itself cannot be fetched, making it impossible to check out that submodule later without having to do a fetch again\&. This is expected to be fixed in a future Git version\&.
+Using \-\-recurse\-submodules can only fetch new commits in submodules that are present locally e\&.g\&. in \fB$GIT_DIR/modules/\fR\&. If the upstream adds a new submodule, that submodule cannot be fetched until it is cloned e\&.g\&. by \fBgit submodule update\fR\&. This is expected to be fixed in a future Git version\&.
 .SH "SEE ALSO"
 .sp
 \fBgit-pull\fR(1)

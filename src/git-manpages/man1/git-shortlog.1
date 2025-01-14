@@ -2,12 +2,12 @@
 .\"     Title: git-shortlog
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-SHORTLOG" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-SHORTLOG" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ git-shortlog \- Summarize \(aqgit log\(aq output
 .SH "SYNOPSIS"
 .sp
 .nf
-\fIgit shortlog\fR [<options>] [<revision range>] [[\-\-] <path>\&...]
+\fIgit shortlog\fR [<options>] [<revision\-range>] [[\-\-] <path>\&...]
 git log \-\-pretty=short | \fIgit shortlog\fR [<options>]
 .fi
 .sp
@@ -80,6 +80,15 @@ Each pretty\-printed commit will be rewrapped before it is shown\&.
 .if n \{\
 .RE
 .\}
+.RE
+.PP
+\-\-date=<format>
+.RS 4
+Show dates formatted according to the given date string\&. (See the
+\fB\-\-date\fR
+option in the "Commit Formatting" section of
+\fBgit-log\fR(1))\&. Useful with
+\fB\-\-group=format:<format>\fR\&.
 .RE
 .PP
 \-\-group=<type>
@@ -130,6 +139,21 @@ is interpreted as a case\-insensitive commit message trailer (see
 \fBReviewed\-by\fR
 trailers, you might want to see who has been reviewing with
 \fBgit shortlog \-ns \-\-group=trailer:reviewed\-by\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBformat:<format>\fR, any string accepted by the
+\fB\-\-format\fR
+option of
+\fIgit log\fR\&. (See the "PRETTY FORMATS" section of
+\fBgit-log\fR(1)\&.)
 .sp
 Note that commits that do not include the trailer will not be counted\&. Likewise, commits with multiple trailers (e\&.g\&., multiple signoffs) may be counted more than once (but only once per unique trailer value in that commit)\&.
 .sp
@@ -171,15 +195,15 @@ If width is
 (zero) then indent the lines of the output without wrapping them\&.
 .RE
 .PP
-<revision range>
+<revision\-range>
 .RS 4
-Show only commits in the specified revision range\&. When no <revision range> is specified, it defaults to
+Show only commits in the specified revision range\&. When no <revision\-range> is specified, it defaults to
 \fBHEAD\fR
 (i\&.e\&. the whole history leading to the current commit)\&.
 \fBorigin\&.\&.HEAD\fR
 specifies all the commits reachable from the current commit (i\&.e\&.
 \fBHEAD\fR), but not from
-\fBorigin\fR\&. For a complete list of ways to spell <revision range>, see the "Specifying Ranges" section of
+\fBorigin\fR\&. For a complete list of ways to spell <revision\-range>, see the "Specifying Ranges" section of
 \fBgitrevisions\fR(7)\&.
 .RE
 .PP
@@ -214,6 +238,11 @@ commits before starting to show the commit output\&.
 \-\-since=<date>, \-\-after=<date>
 .RS 4
 Show commits more recent than a specific date\&.
+.RE
+.PP
+\-\-since\-as\-filter=<date>
+.RS 4
+Show all commits more recent than a specific date\&. This visits all commits in the range, rather than stopping at the first commit which is older than a specific date\&.
 .RE
 .PP
 \-\-until=<date>, \-\-before=<date>
@@ -329,7 +358,13 @@ reset these limits (to no limit) again\&. Equivalent forms are
 .PP
 \-\-first\-parent
 .RS 4
-Follow only the first parent commit upon seeing a merge commit\&. This option can give a better overview when viewing the evolution of a particular topic branch, because merges into a topic branch tend to be only about adjusting to updated upstream from time to time, and this option allows you to ignore the individual commits brought in to your history by such a merge\&.
+When finding commits to include, follow only the first parent commit upon seeing a merge commit\&. This option can give a better overview when viewing the evolution of a particular topic branch, because merges into a topic branch tend to be only about adjusting to updated upstream from time to time, and this option allows you to ignore the individual commits brought in to your history by such a merge\&.
+.RE
+.PP
+\-\-exclude\-first\-parent\-only
+.RS 4
+When finding commits to exclude (with a
+\fI^\fR), follow only the first parent commit upon seeing a merge commit\&. This can be used to find the set of changes in a topic branch from the point where it diverged from the remote branch, given that arbitrary merges can be valid topic branch changes\&.
 .RE
 .PP
 \-\-not
@@ -440,6 +475,26 @@ or
 \fB\-\-all\fR\&. If a trailing
 \fI/*\fR
 is intended, it must be given explicitly\&.
+.RE
+.PP
+\-\-exclude\-hidden=[receive|uploadpack]
+.RS 4
+Do not include refs that would be hidden by
+\fBgit\-receive\-pack\fR
+or
+\fBgit\-upload\-pack\fR
+by consulting the appropriate
+\fBreceive\&.hideRefs\fR
+or
+\fBuploadpack\&.hideRefs\fR
+configuration along with
+\fBtransfer\&.hideRefs\fR
+(see
+\fBgit-config\fR(1))\&. This option affects the next pseudo\-ref option
+\fB\-\-all\fR
+or
+\fB\-\-glob\fR
+and is cleared after processing them\&.
 .RE
 .PP
 \-\-reflog
@@ -689,17 +744,14 @@ Additional option to
 to remove some needless merges from the resulting history, as there are no selected commits contributing to this merge\&.
 .RE
 .PP
-\-\-ancestry\-path
+\-\-ancestry\-path[=<commit>]
 .RS 4
 When given a range of commits to display (e\&.g\&.
 \fIcommit1\&.\&.commit2\fR
 or
-\fIcommit2 ^commit1\fR), only display commits that exist directly on the ancestry chain between the
+\fIcommit2 ^commit1\fR), only display commits in that range that are ancestors of <commit>, descendants of <commit>, or <commit> itself\&. If no commit is specified, use
 \fIcommit1\fR
-and
-\fIcommit2\fR, i\&.e\&. commits that are both descendants of
-\fIcommit1\fR, and ancestors of
-\fIcommit2\fR\&.
+(the excluded part of the range) as <commit>\&. Can be passed multiple times; if so, a commit is included if it is any of the commits given or if it is an ancestor or descendant of one of them\&.
 .RE
 .sp
 A more detailed explanation follows\&.
@@ -1101,9 +1153,9 @@ was then removed completely, because it had one parent and is TREESAME\&.
 .sp
 There is another simplification mode available:
 .PP
-\-\-ancestry\-path
+\-\-ancestry\-path[=<commit>]
 .RS 4
-Limit the displayed commits to those directly on the ancestry chain between the \(lqfrom\(rq and \(lqto\(rq commits in the given commit range\&. I\&.e\&. only display commits that are ancestor of the \(lqto\(rq commit and descendants of the \(lqfrom\(rq commit\&.
+Limit the displayed commits to those which are an ancestor of <commit>, or which are a descendant of <commit>, or are <commit> itself\&.
 .sp
 As an example use case, consider the following commit history:
 .sp
@@ -1169,6 +1221,48 @@ range, it results in:
 .RE
 .\}
 .sp
+We can also use
+\fB\-\-ancestry\-path=D\fR
+instead of
+\fB\-\-ancestry\-path\fR
+which means the same thing when applied to the
+\fID\&.\&.M\fR
+range but is just more explicit\&.
+.sp
+If we instead are interested in a given topic within this range, and all commits affected by that topic, we may only want to view the subset of
+\fBD\&.\&.M\fR
+which contain that topic in their ancestry path\&. So, using
+\fB\-\-ancestry\-path=H D\&.\&.M\fR
+for example would result in:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+                E
+                 \e
+                  G\-\-\-H\-\-\-I\-\-\-J
+                               \e
+                                L\-\-M
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Whereas
+\fB\-\-ancestry\-path=K D\&.\&.M\fR
+would result in
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+                K\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-L\-\-M
+.fi
+.if n \{\
+.RE
+.\}
+.sp
 .RE
 .sp
 Before discussing another option, \fB\-\-show\-pulls\fR, we need to create a new example history\&.
@@ -1224,7 +1318,7 @@ When using \fB\-\-full\-history\fR, Git walks every edge\&. This will discover t
 .\}
 .sp
 .sp
-Here, the merge commits \fBO\fR and \fBP\fR contribute extra noise, as they did not actually contribute a change to \fBfile\&.txt\fR\&. They only merged a topic that was based on an older version of \fBfile\&.txt\fR\&. This is a common issue in repositories using a workflow where many contributors work in parallel and merge their topic branches along a single trunk: manu unrelated merges appear in the \fB\-\-full\-history\fR results\&.
+Here, the merge commits \fBO\fR and \fBP\fR contribute extra noise, as they did not actually contribute a change to \fBfile\&.txt\fR\&. They only merged a topic that was based on an older version of \fBfile\&.txt\fR\&. This is a common issue in repositories using a workflow where many contributors work in parallel and merge their topic branches along a single trunk: many unrelated merges appear in the \fB\-\-full\-history\fR results\&.
 .sp
 When using the \fB\-\-simplify\-merges\fR option, the commits \fBO\fR and \fBP\fR disappear from the results\&. This is because the rewritten second parents of \fBO\fR and \fBP\fR are reachable from their first parents\&. Those edges are removed and then the commits look like single\-parent commits that are TREESAME to their parent\&. This also happens to the commit \fBN\fR, resulting in a history view as follows:
 .sp
@@ -1321,6 +1415,8 @@ The \fB\-\-simplify\-by\-decoration\fR option allows you to view only the big pi
 .SH "MAPPING AUTHORS"
 .sp
 See \fBgitmailmap\fR(5)\&.
+.sp
+Note that if \fBgit shortlog\fR is run outside of a repository (to process log contents on standard input), it will look for a \fB\&.mailmap\fR file in the current directory\&.
 .SH "GIT"
 .sp
 Part of the \fBgit\fR(1) suite

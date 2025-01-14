@@ -25,12 +25,8 @@ ifndef DEVELOPER_INSTALL_DIR
 DEVELOPER_INSTALL_DIR := $(shell xcode-select -p)
 endif
 
-ifndef CLTOOLS_INSTALL_DIR
-CLTOOLS_INSTALL_DIR=/Library/Developer/CommandLineTools
-endif
-
 ifndef LIBRESSL_PREFIX
-LIBRESSL_PREFIX := /usr/local/libressl-macOS$(MACOSX_DEPLOYMENT_TARGET)
+LIBRESSL_PREFIX := /usr/local/libressl-by-deployment-target/$(MACOSX_DEPLOYMENT_TARGET)
 endif
 
 include $(DEVELOPER_DIR)/AppleInternal/Makefiles/DT_Signing.mk
@@ -43,7 +39,13 @@ export OBJROOT ?= $(CURDIR)/roots/obj
 export SYMROOT ?= $(CURDIR)/roots/sym
 export DSTROOT ?= $(CURDIR)/roots/dst
 
+ifdef RC_DEVTOOLS
 PREFIX=$(DEVELOPER_INSTALL_DIR)/usr
+OSV_PREFIX=$(PREFIX)/local
+else
+PREFIX=/usr/local
+OSV_PREFIX=$(PREFIX)
+endif
 
 ifndef SDKROOT
 SDKROOT := $(shell xcrun --sdk macosx.internal --show-sdk-path)
@@ -72,21 +74,22 @@ export RC_CFLAGS := $(cflags)
 export RC_ARCHFLAGS := $(foreach arch,$(RC_ARCHS),-arch $(arch) )
 
 CFLAGS = -g3 -gdwarf-2 -Os -pipe -Wall -Wformat-security -D_FORTIFY_SOURCE=2 -isysroot $(SDKROOT) -iwithsysroot $(LIBRESSL_PREFIX)/include $(RC_NONARCH_CFLAGS)
-LDFLAGS = -sectcreate __TEXT __info_plist $(OBJROOT)/Info.plist -isysroot $(SDKROOT) -L$(SDKROOT)$(LIBRESSL_PREFIX)/lib
+LDFLAGS = -sectcreate __TEXT __info_plist $(OBJROOT)/Info.plist -isysroot $(SDKROOT) -L$(SDKROOT)/usr/local/lib/pcre2-static -L$(SDKROOT)$(LIBRESSL_PREFIX)/lib
 
 STRIP := strip -S
 submakevars := -j`sysctl -n hw.activecpu` prefix=$(PREFIX) \
   perllibdir=$(PREFIX)/share/git-core/perl \
   ETC_GITCONFIG=/etc/gitconfig \
   ETC_GITATTRIBUTES=/etc/gitattributes \
-  PYTHON_PATH='MACOSX_DEPLOYMENT_TARGET="" /usr/bin/python' \
-  PYTHON_PATH_SQ='/usr/bin/python' \
-  NO_LIBPCRE1_JIT=YesPlease \
+  PYTHON_PATH='MACOSX_DEPLOYMENT_TARGET="" /usr/bin/python3' \
+  PYTHON_PATH_SQ='/usr/bin/python3' \
   NO_GETTEXT=YesPlease INSTALL_SYMLINKS=YesPlease \
   NO_FINK=YesPlease NO_DARWIN_PORTS=YesPlease \
-  RUNTIME_PREFIX=YesPlease USE_LIBPCRE1=YesPlease \
+  NO_GITWEB=YesPlease \
+  RUNTIME_PREFIX=YesPlease \
   HAVE_NS_GET_EXECUTABLE_PATH=YesPlease \
   XDL_FAST_HASH=YesPlease \
+  USE_LIBPCRE2=YesPlease \
   GITGUI_VERSION=0.12.2 V=1 \
   LDFLAGS='$(LDFLAGS)' \
   CFLAGS='$(CFLAGS)'
@@ -113,7 +116,7 @@ installsrc:
 else
 installsrc:
 	mkdir -p $(SRCROOT)
-	tar -cp --exclude .gitignore --exclude .git --exclude .svn --exclude CVS . | tar -pox -C "$(SRCROOT)"
+	tar -cp --exclude maintenance-guide --exclude .gitignore --exclude .git --exclude .svn --exclude CVS . | tar -pox -C "$(SRCROOT)"
 endif
 
 installhdrs:
@@ -137,12 +140,14 @@ install: info install-bin install-man install-contrib
 	rm -f "$(DSTROOT)$(PREFIX)"/share/man/man*/*archimport*
 	rm -f "$(DSTROOT)$(PREFIX)"/libexec/git-core/git-svn*
 	rm -rf "$(DSTROOT)$(PREFIX)"/share/git-core/perl/Git/SVN*
-	install -d -o root -g wheel -m 0755 $(DSTROOT)$(PREFIX)/local/OpenSourceVersions
-	install -o root -g wheel -m 0644 $(SRCROOT)/Git.plist $(DSTROOT)$(PREFIX)/local/OpenSourceVersions
+	rm -f "$(DSTROOT)$(PREFIX)"/libexec/git-core/git-instaweb
+	rm -f "$(DSTROOT)$(PREFIX)"/share/man/man5/gitweb.conf.5
+	rm -f "$(DSTROOT)$(PREFIX)"/share/man/man1/git-instaweb.1
+	rm -f "$(DSTROOT)$(PREFIX)"/share/man/man1/gitweb.1
+	install -d -o root -g wheel -m 0755 $(DSTROOT)$(OSV_PREFIX)/OpenSourceVersions
+	install -o root -g wheel -m 0644 $(SRCROOT)/Git.plist $(DSTROOT)$(OSV_PREFIX)/OpenSourceVersions
 	install -o root -g wheel -m 0644 $(SRCROOT)/gitconfig $(DSTROOT)$(PREFIX)/share/git-core
 	install -o root -g wheel -m 0644 $(SRCROOT)/gitattributes $(DSTROOT)$(PREFIX)/share/git-core
-	install -m 0755 -d $(DSTROOT)$(CLTOOLS_INSTALL_DIR)
-	ditto $(DSTROOT)$(DEVELOPER_INSTALL_DIR) $(DSTROOT)$(CLTOOLS_INSTALL_DIR)
 
 install-contrib:
 	install -d -o root -g wheel -m 0755 $(DSTROOT)$(PREFIX)/share/git-core

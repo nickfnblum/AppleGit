@@ -2,12 +2,12 @@
 .\"     Title: gitignore
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GITIGNORE" "5" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GITIGNORE" "5" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -59,7 +59,7 @@ Patterns read from the command line for those commands that support them\&.
 .\}
 Patterns read from a
 \fB\&.gitignore\fR
-file in the same directory as the path, or in any parent directory, with patterns in the higher level files (up to the toplevel of the work tree) being overridden by those in lower level files down to the directory containing the file\&. These patterns match relative to the location of the
+file in the same directory as the path, or in any parent directory (up to the top\-level of the working tree), with patterns in the higher level files being overridden by those in lower level files down to the directory containing the file\&. These patterns match relative to the location of the
 \fB\&.gitignore\fR
 file\&. A project normally includes such
 \fB\&.gitignore\fR
@@ -312,6 +312,8 @@ The optional configuration variable \fBcore\&.excludesFile\fR indicates a path t
 The purpose of gitignore files is to ensure that certain files not tracked by Git remain untracked\&.
 .sp
 To stop tracking a file that is currently tracked, use \fIgit rm \-\-cached\fR\&.
+.sp
+Git does not follow symbolic links when accessing a \fB\&.gitignore\fR file in the working tree\&. This keeps behavior consistent when the file is accessed from the index or a tree versus from the filesystem\&.
 .SH "EXAMPLES"
 .sp
 .RS 4
@@ -324,8 +326,8 @@ To stop tracking a file that is currently tracked, use \fIgit rm \-\-cached\fR\&
 .\}
 The pattern
 \fBhello\&.*\fR
-matches any file or folder whose name begins with
-\fBhello\fR\&. If one wants to restrict this only to the directory and not in its subdirectories, one can prepend the pattern with a slash, i\&.e\&.
+matches any file or directory whose name begins with
+\fBhello\&.\fR\&. If one wants to restrict this only to the directory and not in its subdirectories, one can prepend the pattern with a slash, i\&.e\&.
 \fB/hello\&.*\fR; the pattern now matches
 \fBhello\&.txt\fR,
 \fBhello\&.c\fR

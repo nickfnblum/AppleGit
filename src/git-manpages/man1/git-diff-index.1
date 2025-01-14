@@ -2,12 +2,12 @@
 .\"     Title: git-diff-index
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-DIFF\-INDEX" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-DIFF\-INDEX" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ git-diff-index \- Compare a tree to the working tree or index
 .SH "SYNOPSIS"
 .sp
 .nf
-\fIgit diff\-index\fR [\-m] [\-\-cached] [\-\-merge\-base] [<common diff options>] <tree\-ish> [<path>\&...]
+\fIgit diff\-index\fR [\-m] [\-\-cached] [\-\-merge\-base] [<common\-diff\-options>] <tree\-ish> [<path>\&...]
 .fi
 .sp
 .SH "DESCRIPTION"
@@ -282,14 +282,18 @@ Without this option, pathnames with "unusual" characters are quoted as explained
 .PP
 \-\-name\-only
 .RS 4
-Show only names of changed files\&.
+Show only names of changed files\&. The file names are often encoded in UTF\-8\&. For more information see the discussion about encoding in the
+\fBgit-log\fR(1)
+manual page\&.
 .RE
 .PP
 \-\-name\-status
 .RS 4
 Show only names and status of changed files\&. See the description of the
 \fB\-\-diff\-filter\fR
-option on what the status letters mean\&.
+option on what the status letters mean\&. Just like
+\fB\-\-name\-only\fR
+the file names are often encoded in UTF\-8\&.
 .RE
 .PP
 \-\-submodule[=<format>]
@@ -637,7 +641,7 @@ The
 \fB\-M\fR
 and
 \fB\-C\fR
-options require O(n^2) processing time where n is the number of potential rename/copy targets\&. This option prevents rename/copy detection from running if the number of rename/copy targets exceeds the specified number\&.
+options involve some preliminary steps that can detect subsets of renames/copies cheaply, followed by an exhaustive fallback portion that compares all remaining unpaired destinations to all relevant sources\&. (For renames, only remaining unpaired sources are relevant; for copies, all original sources are relevant\&.) For N sources and destinations, this exhaustive check is O(N^2)\&. This option prevents the exhaustive portion of rename/copy detection from running if the number of source/destination files involved exceeds the specified number\&. Defaults to diff\&.renameLimit\&. Note that a value of 0 is treated as unlimited\&.
 .RE
 .PP
 \-\-diff\-filter=[(A|C|D|M|R|T|U|X|B)\&...[*]]
@@ -650,7 +654,7 @@ Also, these upper\-case letters can be downcased to exclude\&. E\&.g\&.
 \fB\-\-diff\-filter=ad\fR
 excludes added and deleted paths\&.
 .sp
-Note that not all diffs can feature all types\&. For instance, diffs from the index to the working tree can never have Added entries (because the set of paths included in the diff is limited by what is in the index)\&. Similarly, copied and renamed entries cannot appear if detection for those types is disabled\&.
+Note that not all diffs can feature all types\&. For instance, copied and renamed entries cannot appear if detection for those types is disabled\&.
 .RE
 .PP
 \-S<string>
@@ -776,6 +780,15 @@ Each other line contains a single pattern\&.
 .RE
 .sp
 Patterns have the same syntax and semantics as patterns used for fnmatch(3) without the FNM_PATHNAME flag, except a pathname also matches a pattern if removing any number of the final pathname components matches the pattern\&. For example, the pattern "\fBfoo*bar\fR" matches "\fBfooasdfbar\fR" and "\fBfoo/bar/baz/asdf\fR" but not "\fBfoobarx\fR"\&.
+.RE
+.PP
+\-\-skip\-to=<file>, \-\-rotate\-to=<file>
+.RS 4
+Discard the files before the named <file> from the output (i\&.e\&.
+\fIskip to\fR), or move them to the end of the output (i\&.e\&.
+\fIrotate to\fR)\&. These were invented primarily for use of the
+\fBgit difftool\fR
+command, and may not be very useful otherwise\&.
 .RE
 .PP
 \-R
@@ -1073,7 +1086,7 @@ a space\&.
 .sp -1
 .IP "  8." 4.2
 .\}
-sha1 for "dst"; 0{40} if creation, unmerged or "look at work tree"\&.
+sha1 for "dst"; 0{40} if deletion, unmerged or "work tree out of sync with the index"\&.
 .RE
 .sp
 .RS 4
@@ -1224,7 +1237,7 @@ R: renaming of a file
 .sp -1
 .IP \(bu 2.3
 .\}
-T: change in the type of the file
+T: change in the type of the file (regular file, symbolic link or submodule)
 .RE
 .sp
 .RS 4
@@ -1251,7 +1264,7 @@ X: "unknown" change type (most probably a bug, please report it)
 .sp
 Status letters C and R are always followed by a score (denoting the percentage of similarity between the source and target of the move or copy)\&. Status letter M may be followed by a score (denoting the percentage of dissimilarity) for file rewrites\&.
 .sp
-<sha1> is shown as all 0\(cqs if a file is new on the filesystem and it is out of sync with the index\&.
+The sha1 for "dst" is shown as all 0\(cqs if a file on the filesystem is out of sync with the index\&.
 .sp
 Example:
 .sp
@@ -1361,7 +1374,7 @@ Examples when \fB\-\-combined\-all\-paths\fR added to either \fB\-c\fR or \fB\-\
 Note that \fIcombined diff\fR lists only files which were modified from all parents\&.
 .SH "GENERATING PATCH TEXT WITH \-P"
 .sp
-Running \fBgit-diff\fR(1), \fBgit-log\fR(1), \fBgit-show\fR(1), \fBgit-diff-index\fR(1), \fBgit-diff-tree\fR(1), or \fBgit-diff-files\fR(1) with the \fB\-p\fR option produces patch text\&. You can customize the creation of patch text via the \fBGIT_EXTERNAL_DIFF\fR and the \fBGIT_DIFF_OPTS\fR environment variables (see \fBgit\fR(1))\&.
+Running \fBgit-diff\fR(1), \fBgit-log\fR(1), \fBgit-show\fR(1), \fBgit-diff-index\fR(1), \fBgit-diff-tree\fR(1), or \fBgit-diff-files\fR(1) with the \fB\-p\fR option produces patch text\&. You can customize the creation of patch text via the \fBGIT_EXTERNAL_DIFF\fR and the \fBGIT_DIFF_OPTS\fR environment variables (see \fBgit\fR(1)), and the \fBdiff\fR attribute (see \fBgitattributes\fR(5))\&.
 .sp
 What the \-p option produces is slightly different from the traditional diff format:
 .sp
@@ -1491,6 +1504,19 @@ rename to a
 .if n \{\
 .RE
 .\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 5.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  5." 4.2
+.\}
+Hunk headers mention the name of the function to which the hunk applies\&. See "Defining a custom hunk\-header" in
+\fBgitattributes\fR(5)
+for details of how to tailor to this to specific languages\&.
 .RE
 .SH "COMBINED DIFF FORMAT"
 .sp
@@ -1933,8 +1959,8 @@ Example: let\(cqs say I had renamed \fBcommit\&.c\fR to \fBgit\-commit\&.c\fR, a
 .\}
 .nf
 torvalds@ppc970:~/git> git diff\-index \-\-cached HEAD
-\-100644 blob    4161aecc6700a2eb579e842af0b7f22b98443f74        commit\&.c
-+100644 blob    4161aecc6700a2eb579e842af0b7f22b98443f74        git\-commit\&.c
+:100644 000000 4161aecc6700a2eb579e842af0b7f22b98443f74 0000000000000000000000000000000000000000 D    commit\&.c
+:000000 100644 0000000000000000000000000000000000000000 4161aecc6700a2eb579e842af0b7f22b98443f74 A    git\-commit\&.c
 .fi
 .if n \{\
 .RE
@@ -1969,7 +1995,7 @@ The twist is that if some file doesn\(cqt match the index, we don\(cqt have a ba
 .\}
 .nf
 torvalds@ppc970:~/v2\&.6/linux> git diff\-index \-\-abbrev HEAD
-:100644 100664 7476bb\&.\&.\&. 000000\&.\&.\&.      kernel/sched\&.c
+:100644 100644 7476bb5ba 000000000 M  kernel/sched\&.c
 .fi
 .if n \{\
 .RE

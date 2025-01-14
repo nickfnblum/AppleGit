@@ -2,12 +2,12 @@
 .\"     Title: gitglossary
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GITGLOSSARY" "7" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GITGLOSSARY" "7" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -66,7 +66,9 @@ branch
 .RS 4
 A "branch" is a line of development\&. The most recent
 commit
-on a branch is referred to as the tip of that branch\&. The tip of the branch is referenced by a branch
+on a branch is referred to as the tip of that branch\&. The tip of the branch is
+referenced
+by a branch
 head, which moves forward as additional development is done on the branch\&. A single Git
 repository
 can track an arbitrary number of branches, but your
@@ -145,6 +147,25 @@ index
 and advancing
 HEAD
 to point at the new commit\&.
+.RE
+.PP
+commit graph concept, representations and usage
+.RS 4
+A synonym for the
+DAG
+structure formed by the commits in the object database,
+referenced
+by branch tips, using their
+chain
+of linked commits\&. This structure is the definitive commit graph\&. The graph can be represented in other ways, e\&.g\&. the
+"commit\-graph" file\&.
+.RE
+.PP
+commit\-graph file
+.RS 4
+The "commit\-graph" (normally hyphenated) file is a supplemental representation of the
+commit graph
+which accelerates commit graph walks\&. The "commit\-graph" file is stored either in the \&.git/objects/info directory or in the info directory of an alternate object database\&.
 .RE
 .PP
 commit object
@@ -251,7 +272,7 @@ and you are "merging" another
 branch\(aqs changes that happen to be a descendant of what you have\&. In such a case, you do not make a new
 merge
 commit
-but instead just update to his revision\&. This will happen frequently on a
+but instead just update your branch to point at the same revision as the branch you are merging\&. This will happen frequently on a
 remote\-tracking branch
 of a remote
 repository\&.
@@ -405,7 +426,7 @@ object name\&. The objects usually live in
 \fB$GIT_DIR/objects/\fR\&.
 .RE
 .PP
-object identifier
+object identifier (oid)
 .RS 4
 Synonym for
 object name\&.
@@ -471,7 +492,7 @@ pathspec
 .RS 4
 Pattern used to limit paths in Git commands\&.
 .sp
-Pathspecs are used on the command line of "git ls\-files", "git ls\-tree", "git add", "git grep", "git diff", "git checkout", and many other commands to limit the scope of operations to some subset of the tree or worktree\&. See the documentation of each command for whether paths are relative to the current directory or toplevel\&. The pathspec syntax is as follows:
+Pathspecs are used on the command line of "git ls\-files", "git ls\-tree", "git add", "git grep", "git diff", "git checkout", and many other commands to limit the scope of operations to some subset of the tree or working tree\&. See the documentation of each command for whether paths are relative to the current directory or toplevel\&. The pathspec syntax is as follows:
 .sp
 .RS 4
 .ie n \{\
@@ -783,6 +804,13 @@ blobs
 that they contain\&.
 .RE
 .PP
+reachability bitmaps
+.RS 4
+Reachability bitmaps store information about the
+reachability
+of a selected set of commits in a packfile, or a multi\-pack index (MIDX), to speed up object search\&. The bitmaps are stored in a "\&.bitmap" file\&. A repository may have at most one bitmap file in use\&. The bitmap file may belong to either one pack, or the repository\(cqs multi\-pack index (if it exists)\&.
+.RE
+.PP
 rebase
 .RS 4
 To reapply a series of changes from a
@@ -1077,6 +1105,11 @@ working tree
 The tree of actual checked out files\&. The working tree normally contains the contents of the
 HEAD
 commit\(cqs tree, plus any local changes that you have made but not yet committed\&.
+.RE
+.PP
+worktree
+.RS 4
+A repository can have zero (i\&.e\&. bare repository) or one or more worktrees attached to it\&. One "worktree" consists of a "working tree" and repository metadata, most of which are shared among other worktrees of a single repository, and some of which are maintained separately per worktree (e\&.g\&. the index, HEAD and pseudorefs like MERGE_HEAD, per\-worktree refs and per\-worktree configuration file)\&.
 .RE
 .SH "SEE ALSO"
 .sp

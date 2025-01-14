@@ -2,12 +2,12 @@
 .\"     Title: git-send-email
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-SEND\-EMAIL" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-SEND\-EMAIL" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,13 +32,14 @@ git-send-email \- Send a collection of patches as emails
 .SH "SYNOPSIS"
 .sp
 .nf
-\fIgit send\-email\fR [<options>] <file|directory|rev\-list options>\&...
+\fIgit send\-email\fR [<options>] <file|directory>\&...
+\fIgit send\-email\fR [<options>] <format\-patch options>
 \fIgit send\-email\fR \-\-dump\-aliases
 .fi
 .sp
 .SH "DESCRIPTION"
 .sp
-Takes the patches given on the command line and emails them out\&. Patches can be specified as files, directories (which will send all files in the directory), or directly as a revision list\&. In the last case, any format accepted by \fBgit-format-patch\fR(1) can be passed to git send\-email\&.
+Takes the patches given on the command line and emails them out\&. Patches can be specified as files, directories (which will send all files in the directory), or directly as a revision list\&. In the last case, any format accepted by \fBgit-format-patch\fR(1) can be passed to git send\-email, as well as options understood by \fBgit-format-patch\fR(1)\&.
 .sp
 The header of the email is configurable via command\-line options\&. If not specified on the command line, the user will be prompted with a ReadLine enabled interface to provide the necessary information\&.
 .sp
@@ -219,12 +220,31 @@ address, set the value to "auto"\&. If you use the sendmail binary, you must hav
 configuration variable; if that is unspecified, choosing the envelope sender is left to your MTA\&.
 .RE
 .PP
+\-\-sendmail\-cmd=<command>
+.RS 4
+Specify a command to run to send the email\&. The command should be sendmail\-like; specifically, it must support the
+\fB\-i\fR
+option\&. The command will be executed in the shell if necessary\&. Default is the value of
+\fBsendemail\&.sendmailcmd\fR\&. If unspecified, and if \-\-smtp\-server is also unspecified, git\-send\-email will search for
+\fBsendmail\fR
+in
+\fB/usr/sbin\fR,
+\fB/usr/lib\fR
+and $PATH\&.
+.RE
+.PP
 \-\-smtp\-encryption=<encryption>
 .RS 4
-Specify the encryption to use, either
+Specify in what way encrypting begins for the SMTP connection\&. Valid values are
 \fIssl\fR
-or
-\fItls\fR\&. Any other value reverts to plain SMTP\&. Default is the value of
+and
+\fItls\fR\&. Any other value reverts to plain (unencrypted) SMTP, which defaults to port 25\&. Despite the names, both values will use the same newer version of TLS, but for historic reasons have these names\&.
+\fIssl\fR
+refers to "implicit" encryption (sometimes called SMTPS), that uses port 465 by default\&.
+\fItls\fR
+refers to "explicit" encryption (often known as STARTTLS), that uses port 25 by default\&. Other ports might be used by the SMTP server, which are not the default\&. Commonly found alternative port for
+\fItls\fR
+and unencrypted is 587\&. You need to check your provider\(cqs documentation or your server configuration to make sure for your own case\&. Default is the value of
 \fBsendemail\&.smtpEncryption\fR\&.
 .RE
 .PP
@@ -285,18 +305,22 @@ Disable SMTP authentication\&. Short hand for
 .RS 4
 If set, specifies the outgoing SMTP server to use (e\&.g\&.
 \fBsmtp\&.example\&.com\fR
-or a raw IP address)\&. Alternatively it can specify a full pathname of a sendmail\-like program instead; the program must support the
-\fB\-i\fR
-option\&. Default value can be specified by the
-\fBsendemail\&.smtpServer\fR
-configuration option; the built\-in default is to search for
+or a raw IP address)\&. If unspecified, and if
+\fB\-\-sendmail\-cmd\fR
+is also unspecified, the default is to search for
 \fBsendmail\fR
 in
 \fB/usr/sbin\fR,
 \fB/usr/lib\fR
-and $PATH if such program is available, falling back to
+and $PATH if such a program is available, falling back to
 \fBlocalhost\fR
 otherwise\&.
+.sp
+For backward compatibility, this option can also specify a full pathname of a sendmail\-like program instead; the program must support the
+\fB\-i\fR
+option\&. This method does not support passing arguments or using plain command names\&. For those use cases, consider using
+\fB\-\-sendmail\-cmd\fR
+instead\&.
 .RE
 .PP
 \-\-smtp\-server\-port=<port>
@@ -723,6 +747,63 @@ Instead of the normal operation, dump the shorthand alias names from the configu
 for more information about aliases\&.
 .RE
 .SH "CONFIGURATION"
+.sp
+Everything below this line in this section is selectively included from the \fBgit-config\fR(1) documentation\&. The content is the same as what\(cqs found there:
+.PP
+sendemail\&.identity
+.RS 4
+A configuration identity\&. When given, causes values in the
+\fIsendemail\&.<identity>\fR
+subsection to take precedence over values in the
+\fIsendemail\fR
+section\&. The default identity is the value of
+\fBsendemail\&.identity\fR\&.
+.RE
+.PP
+sendemail\&.smtpEncryption
+.RS 4
+See
+\fBgit-send-email\fR(1)
+for description\&. Note that this setting is not subject to the
+\fIidentity\fR
+mechanism\&.
+.RE
+.PP
+sendemail\&.smtpsslcertpath
+.RS 4
+Path to ca\-certificates (either a directory or a single file)\&. Set it to an empty string to disable certificate verification\&.
+.RE
+.PP
+sendemail\&.<identity>\&.*
+.RS 4
+Identity\-specific versions of the
+\fIsendemail\&.*\fR
+parameters found below, taking precedence over those when this identity is selected, through either the command\-line or
+\fBsendemail\&.identity\fR\&.
+.RE
+.PP
+sendemail\&.multiEdit
+.RS 4
+If true (default), a single editor instance will be spawned to edit files you have to edit (patches when
+\fB\-\-annotate\fR
+is used, and the summary when
+\fB\-\-compose\fR
+is used)\&. If false, files will be edited one after the other, spawning a new editor each time\&.
+.RE
+.PP
+sendemail\&.confirm
+.RS 4
+Sets the default for whether to confirm before sending\&. Must be one of
+\fIalways\fR,
+\fInever\fR,
+\fIcc\fR,
+\fIcompose\fR, or
+\fIauto\fR\&. See
+\fB\-\-confirm\fR
+in the
+\fBgit-send-email\fR(1)
+documentation for the meaning of these values\&.
+.RE
 .PP
 sendemail\&.aliasesFile
 .RS 4
@@ -793,25 +874,40 @@ Warnings are printed on the standard error output for any explicitly unsupported
 .RE
 .RE
 .PP
-sendemail\&.multiEdit
+sendemail\&.annotate, sendemail\&.bcc, sendemail\&.cc, sendemail\&.ccCmd, sendemail\&.chainReplyTo, sendemail\&.envelopeSender, sendemail\&.from, sendemail\&.signedoffbycc, sendemail\&.smtpPass, sendemail\&.suppresscc, sendemail\&.suppressFrom, sendemail\&.to, sendemail\&.tocmd, sendemail\&.smtpDomain, sendemail\&.smtpServer, sendemail\&.smtpServerPort, sendemail\&.smtpServerOption, sendemail\&.smtpUser, sendemail\&.thread, sendemail\&.transferEncoding, sendemail\&.validate, sendemail\&.xmailer
 .RS 4
-If true (default), a single editor instance will be spawned to edit files you have to edit (patches when
-\fB\-\-annotate\fR
-is used, and the summary when
-\fB\-\-compose\fR
-is used)\&. If false, files will be edited one after the other, spawning a new editor each time\&.
+These configuration variables all provide a default for
+\fBgit-send-email\fR(1)
+command\-line options\&. See its documentation for details\&.
 .RE
 .PP
-sendemail\&.confirm
+sendemail\&.signedoffcc (deprecated)
 .RS 4
-Sets the default for whether to confirm before sending\&. Must be one of
-\fIalways\fR,
-\fInever\fR,
-\fIcc\fR,
-\fIcompose\fR, or
-\fIauto\fR\&. See
-\fB\-\-confirm\fR
-in the previous section for the meaning of these values\&.
+Deprecated alias for
+\fBsendemail\&.signedoffbycc\fR\&.
+.RE
+.PP
+sendemail\&.smtpBatchSize
+.RS 4
+Number of messages to be sent per connection, after that a relogin will happen\&. If the value is 0 or undefined, send all messages in one connection\&. See also the
+\fB\-\-batch\-size\fR
+option of
+\fBgit-send-email\fR(1)\&.
+.RE
+.PP
+sendemail\&.smtpReloginDelay
+.RS 4
+Seconds wait before reconnecting to smtp server\&. See also the
+\fB\-\-relogin\-delay\fR
+option of
+\fBgit-send-email\fR(1)\&.
+.RE
+.PP
+sendemail\&.forbidSendmailVariables
+.RS 4
+To avoid common misconfiguration mistakes,
+\fBgit-send-email\fR(1)
+will abort with a warning if any configuration options for "sendmail" exist\&. Set this variable to bypass the check\&.
 .RE
 .SH "EXAMPLES"
 .SS "Use gmail as the smtp server"

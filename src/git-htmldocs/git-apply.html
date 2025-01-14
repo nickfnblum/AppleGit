@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 9.0.0rc2" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>git-apply(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -756,7 +756,7 @@ git-apply(1) Manual Page
           [--ignore-space-change | --ignore-whitespace]
           [--whitespace=(nowarn|warn|fix|error|error-all)]
           [--exclude=&lt;path&gt;] [--include=&lt;path&gt;] [--directory=&lt;root&gt;]
-          [--verbose] [--unsafe-paths] [&lt;patch&gt;&#8230;]</pre>
+          [--verbose | --quiet] [--unsafe-paths] [--allow-empty] [&lt;patch&gt;&#8230;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -876,12 +876,13 @@ and does not require them to be in a Git repository.</p></div>
 </dt>
 <dd>
 <p>
-        When the patch does not apply cleanly, fall back on 3-way merge if
-        the patch records the identity of blobs it is supposed to apply to,
-        and we have those blobs available locally, possibly leaving the
+        Attempt 3-way merge if the patch records the identity of blobs it is supposed
+        to apply to and we have those blobs available locally, possibly leaving the
         conflict markers in the files in the working tree for the user to
-        resolve.  This option implies the <code>--index</code> option, and is incompatible
-        with the <code>--reject</code> and the <code>--cached</code> options.
+        resolve.  This option implies the <code>--index</code> option unless the
+        <code>--cached</code> option is used, and is incompatible with the <code>--reject</code> option.
+        When used with the <code>--cached</code> option, any conflicts are left at higher stages
+        in the cache.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1124,6 +1125,18 @@ behavior:</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+-q
+</dt>
+<dt class="hdlist1">
+--quiet
+</dt>
+<dd>
+<p>
+        Suppress stderr output. Messages about patch status and progress
+        will not be printed.
+</p>
+</dd>
+<dt class="hdlist1">
 --recount
 </dt>
 <dd>
@@ -1159,21 +1172,36 @@ running <code>git apply --directory=modules/git-gui</code>.</p></div>
 the <code>--unsafe-paths</code> option to override this safety check.  This option
 has no effect when <code>--index</code> or <code>--cached</code> is in use.</p></div>
 </dd>
+<dt class="hdlist1">
+--allow-empty
+</dt>
+<dd>
+<p>
+        Don&#8217;t return error for patches containing no diff. This includes
+        empty patches and patches with commit text only.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_configuration">CONFIGURATION</h2>
 <div class="sectionbody">
+<div class="paragraph"><p>Everything below this line in this section is selectively included
+from the <a href="git-config.html">git-config(1)</a> documentation. The content is the same
+as what&#8217;s found there:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 apply.ignoreWhitespace
 </dt>
 <dd>
 <p>
-        Set to <em>change</em> if you want changes in whitespace to be ignored by default.
-        Set to one of: no, none, never, false if you want changes in
-        whitespace to be significant.
+        When set to <em>change</em>, tells <em>git apply</em> to ignore changes in
+        whitespace, in the same way as the <code>--ignore-space-change</code>
+        option.
+        When set to one of: no, none, never, false tells <em>git apply</em> to
+        respect all whitespace differences.
+        See <a href="git-apply.html">git-apply(1)</a>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1181,8 +1209,8 @@ apply.whitespace
 </dt>
 <dd>
 <p>
-        When no <code>--whitespace</code> flag is given from the command
-        line, this configuration item is used as the default.
+        Tells <em>git apply</em> how to handle whitespaces, in the same way
+        as the <code>--whitespace</code> option. See <a href="git-apply.html">git-apply(1)</a>.
 </p>
 </dd>
 </dl></div>
@@ -1220,7 +1248,7 @@ subdirectory is checked and (if possible) updated.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-08-31 16:12:31 PDT
+ 2022-09-15 05:23:11 JST
 </div>
 </div>
 </body>

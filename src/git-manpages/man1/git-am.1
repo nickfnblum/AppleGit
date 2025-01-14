@@ -2,12 +2,12 @@
 .\"     Title: git-am
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-AM" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-AM" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,8 +38,10 @@ git-am \- Apply a series of patches from a mailbox
          [\-\-whitespace=<option>] [\-C<n>] [\-p<n>] [\-\-directory=<dir>]
          [\-\-exclude=<path>] [\-\-include=<path>] [\-\-reject] [\-q | \-\-quiet]
          [\-\-[no\-]scissors] [\-S[<keyid>]] [\-\-patch\-format=<format>]
+         [\-\-quoted\-cr=<action>]
+         [\-\-empty=(stop|drop|keep)]
          [(<mbox> | <Maildir>)\&...]
-\fIgit am\fR (\-\-continue | \-\-skip | \-\-abort | \-\-quit | \-\-show\-current\-patch[=(diff|raw)])
+\fIgit am\fR (\-\-continue | \-\-skip | \-\-abort | \-\-quit | \-\-show\-current\-patch[=(diff|raw)] | \-\-allow\-empty)
 .fi
 .sp
 .SH "DESCRIPTION"
@@ -109,6 +111,22 @@ Ignore scissors lines (see
 \fBgit-mailinfo\fR(1))\&.
 .RE
 .PP
+\-\-quoted\-cr=<action>
+.RS 4
+This flag will be passed down to
+\fIgit mailinfo\fR
+(see
+\fBgit-mailinfo\fR(1))\&.
+.RE
+.PP
+\-\-empty=(stop|drop|keep)
+.RS 4
+By default, or when the option is set to
+\fIstop\fR, the command errors out on an input e\-mail message lacking a patch and stops into the middle of the current am session\&. When this option is set to
+\fIdrop\fR, skip such an e\-mail message instead\&. When this option is set to
+\fIkeep\fR, create an empty commit, recording the contents of the e\-mail message as its log\&.
+.RE
+.PP
 \-m, \-\-message\-id
 .RS 4
 Pass the
@@ -142,7 +160,7 @@ flag to
 \fIgit mailinfo\fR
 (see
 \fBgit-mailinfo\fR(1))\&. The proposed commit log message taken from the e\-mail is re\-coded into UTF\-8 encoding (configuration variable
-\fBi18n\&.commitencoding\fR
+\fBi18n\&.commitEncoding\fR
 can be used to specify project\(cqs preferred encoding if it is not UTF\-8)\&.
 .sp
 This was optional in prior versions of git, but now it is the default\&. You can use
@@ -170,7 +188,12 @@ can be used to override am\&.threeWay configuration variable\&. For more informa
 .PP
 \-\-rerere\-autoupdate, \-\-no\-rerere\-autoupdate
 .RS 4
-Allow the rerere mechanism to update the index with the result of auto\-conflict resolution if possible\&.
+After the rerere mechanism reuses a recorded resolution on the current conflict to update the files in the working tree, allow it to also update the index with the result of resolution\&.
+\fB\-\-no\-rerere\-autoupdate\fR
+is a good way to double\-check what
+\fBrerere\fR
+did and catch potential mismerges, before committing the result to the index with a separate
+\fBgit add\fR\&.
 .RE
 .PP
 \-\-ignore\-space\-change, \-\-ignore\-whitespace, \-\-whitespace=<option>, \-C<n>, \-p<n>, \-\-directory=<dir>, \-\-exclude=<path>, \-\-include=<path>, \-\-reject
@@ -237,7 +260,7 @@ and
 .PP
 \-\-abort
 .RS 4
-Restore the original branch and abort the patching operation\&.
+Restore the original branch and abort the patching operation\&. Revert contents of files involved in the am operation to their pre\-am state\&.
 .RE
 .PP
 \-\-quit
@@ -254,6 +277,11 @@ has stopped due to conflicts\&. If
 is specified, show the raw contents of the e\-mail message; if
 \fBdiff\fR, show the diff portion only\&. Defaults to
 \fBraw\fR\&.
+.RE
+.PP
+\-\-allow\-empty
+.RS 4
+After a patch failure on an input e\-mail message lacking a patch, create an empty commit with the contents of the e\-mail message as its log message\&.
 .RE
 .SH "DISCUSSION"
 .sp
@@ -334,6 +362,35 @@ Before any patches are applied, ORIG_HEAD is set to the tip of the current branc
 .SH "HOOKS"
 .sp
 This command can run \fBapplypatch\-msg\fR, \fBpre\-applypatch\fR, and \fBpost\-applypatch\fR hooks\&. See \fBgithooks\fR(5) for more information\&.
+.SH "CONFIGURATION"
+.sp
+Everything below this line in this section is selectively included from the \fBgit-config\fR(1) documentation\&. The content is the same as what\(cqs found there:
+.PP
+am\&.keepcr
+.RS 4
+If true, git\-am will call git\-mailsplit for patches in mbox format with parameter
+\fB\-\-keep\-cr\fR\&. In this case git\-mailsplit will not remove
+\fB\er\fR
+from lines ending with
+\fB\er\en\fR\&. Can be overridden by giving
+\fB\-\-no\-keep\-cr\fR
+from the command line\&. See
+\fBgit-am\fR(1),
+\fBgit-mailsplit\fR(1)\&.
+.RE
+.PP
+am\&.threeWay
+.RS 4
+By default,
+\fBgit am\fR
+will fail if the patch does not apply cleanly\&. When set to true, this setting tells
+\fBgit am\fR
+to fall back on 3\-way merge if the patch records the identity of blobs it is supposed to apply to and we have those blobs available locally (equivalent to giving the
+\fB\-\-3way\fR
+option from the command line)\&. Defaults to
+\fBfalse\fR\&. See
+\fBgit-am\fR(1)\&.
+.RE
 .SH "SEE ALSO"
 .sp
 \fBgit-apply\fR(1)\&.

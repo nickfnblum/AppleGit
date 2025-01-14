@@ -2,12 +2,12 @@
 .\"     Title: git-maintenance
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-MAINTENANCE" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-MAINTENANCE" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,6 +33,8 @@ git-maintenance \- Run tasks to optimize Git repository data
 .sp
 .nf
 \fIgit maintenance\fR run [<options>]
+\fIgit maintenance\fR start [\-\-scheduler=<scheduler>]
+\fIgit maintenance\fR (stop|register|unregister) [<options>]
 .fi
 .sp
 .SH "DESCRIPTION"
@@ -44,11 +46,36 @@ Git commands that add repository data, such as \fBgit add\fR or \fBgit fetch\fR,
 The \fBgit maintenance\fR command provides flexibility for how to optimize the Git repository\&.
 .SH "SUBCOMMANDS"
 .PP
+run
+.RS 4
+Run one or more maintenance tasks\&. If one or more
+\fB\-\-task\fR
+options are specified, then those tasks are run in that order\&. Otherwise, the tasks are determined by which
+\fBmaintenance\&.<task>\&.enabled\fR
+config options are true\&. By default, only
+\fBmaintenance\&.gc\&.enabled\fR
+is true\&.
+.RE
+.PP
+start
+.RS 4
+Start running maintenance on the current repository\&. This performs the same config updates as the
+\fBregister\fR
+subcommand, then updates the background scheduler to run
+\fBgit maintenance run \-\-scheduled\fR
+on an hourly basis\&.
+.RE
+.PP
+stop
+.RS 4
+Halt the background maintenance schedule\&. The current repository is not removed from the list of maintained repositories, in case the background maintenance is restarted later\&.
+.RE
+.PP
 register
 .RS 4
 Initialize Git config values so any scheduled maintenance will start running on this repository\&. This adds the repository to the
 \fBmaintenance\&.repo\fR
-config variable in the current user\(cqs global config and enables some recommended configuration values for
+config variable in the current user\(cqs global config, or the config specified by \-\-config\-file option, and enables some recommended configuration values for
 \fBmaintenance\&.<task>\&.schedule\fR\&. The tasks that are enabled are safe for running in the background without disrupting foreground processes\&.
 .sp
 The
@@ -123,34 +150,15 @@ in the current repository\&. This config setting will remain after a
 command\&.
 .RE
 .PP
-run
-.RS 4
-Run one or more maintenance tasks\&. If one or more
-\fB\-\-task\fR
-options are specified, then those tasks are run in that order\&. Otherwise, the tasks are determined by which
-\fBmaintenance\&.<task>\&.enabled\fR
-config options are true\&. By default, only
-\fBmaintenance\&.gc\&.enabled\fR
-is true\&.
-.RE
-.PP
-start
-.RS 4
-Start running maintenance on the current repository\&. This performs the same config updates as the
-\fBregister\fR
-subcommand, then updates the background scheduler to run
-\fBgit maintenance run \-\-scheduled\fR
-on an hourly basis\&.
-.RE
-.PP
-stop
-.RS 4
-Halt the background maintenance schedule\&. The current repository is not removed from the list of maintained repositories, in case the background maintenance is restarted later\&.
-.RE
-.PP
 unregister
 .RS 4
 Remove the current repository from background maintenance\&. This only removes the repository from the configured list\&. It does not stop the background maintenance processes from running\&.
+.sp
+The
+\fBunregister\fR
+subcommand will report an error if the current repository is not already registered\&. Use the
+\fB\-\-force\fR
+option to return success even when the current repository is not registered\&.
 .RE
 .SH "TASKS"
 .PP
@@ -173,11 +181,8 @@ The
 \fBprefetch\fR
 task updates the object directory with the latest objects from all registered remotes\&. For each remote, a
 \fBgit fetch\fR
-command is run\&. The refmap is custom to avoid updating local or remote branches (those in
-\fBrefs/heads\fR
-or
-\fBrefs/remotes\fR)\&. Instead, the remote refs are stored in
-\fBrefs/prefetch/<remote>/\fR\&. Also, tags are not updated\&.
+command is run\&. The configured refspec is modified to place all requested refs within
+\fBrefs/prefetch/\fR\&. Also, tags are not updated\&.
 .sp
 This is done to avoid disrupting the remote\-tracking branches\&. The end users expect these refs to stay unmoved unless they initiate a fetch\&. With prefetch task, however, the objects necessary to complete a later real fetch would already be obtained, so the real fetch would go faster\&. In the ideal case, it will just become an update to a bunch of remote\-tracking branches without any object transfer\&.
 .RE
@@ -223,6 +228,15 @@ option for the
 \fBrepack\fR
 subcommand in
 \fBgit-multi-pack-index\fR(1)\&. The default batch\-size is zero, which is a special case that attempts to repack all pack\-files into a single pack\-file\&.
+.RE
+.PP
+pack\-refs
+.RS 4
+The
+\fBpack\-refs\fR
+task collects the loose reference files and collects them into a single file\&. This speeds up operations that need to iterate across many references\&. See
+\fBgit-pack-refs\fR(1)
+for more information\&.
 .RE
 .SH "OPTIONS"
 .PP
@@ -277,6 +291,31 @@ section for the list of accepted
 \fB<task>\fR
 values\&.
 .RE
+.PP
+\-\-scheduler=auto|crontab|systemd\-timer|launchctl|schtasks
+.RS 4
+When combined with the
+\fBstart\fR
+subcommand, specify the scheduler for running the hourly, daily and weekly executions of
+\fBgit maintenance run\fR\&. Possible values for
+\fB<scheduler>\fR
+are
+\fBauto\fR,
+\fBcrontab\fR
+(POSIX),
+\fBsystemd\-timer\fR
+(Linux),
+\fBlaunchctl\fR
+(macOS), and
+\fBschtasks\fR
+(Windows)\&. When
+\fBauto\fR
+is specified, the appropriate platform\-specific scheduler is used; on Linux,
+\fBsystemd\-timer\fR
+is used if available, otherwise
+\fBcrontab\fR\&. Default is
+\fBauto\fR\&.
+.RE
 .SH "TROUBLESHOOTING"
 .sp
 The \fBgit maintenance\fR command is designed to simplify the repository maintenance patterns while minimizing user wait time during Git commands\&. A variety of configuration options are available to allow customizing this process\&. The default maintenance options focus on operations that complete quickly, even on large repositories\&.
@@ -321,6 +360,53 @@ The \fBcrontab\fR entry specifies the full path of the \fBgit\fR executable to e
 These commands use \fBgit for\-each\-repo \-\-config=maintenance\&.repo\fR to run \fBgit maintenance run \-\-schedule=<frequency>\fR on each repository listed in the multi\-valued \fBmaintenance\&.repo\fR config option\&. These are typically loaded from the user\-specific global config\&. The \fBgit maintenance\fR process then determines which maintenance tasks are configured to run on each repository with each \fB<frequency>\fR using the \fBmaintenance\&.<task>\&.schedule\fR config options\&. These values are loaded from the global or repository config values\&.
 .sp
 If the config values are insufficient to achieve your desired background maintenance schedule, then you can create your own schedule\&. If you run \fBcrontab \-e\fR, then an editor will load with your user\-specific \fBcron\fR schedule\&. In that editor, you can add your own schedule lines\&. You could start by adapting the default schedule listed earlier, or you could read the crontab(5) documentation for advanced scheduling techniques\&. Please do use the full path and \fB\-\-exec\-path\fR techniques from the default schedule to ensure you are executing the correct binaries in your schedule\&.
+.SH "BACKGROUND MAINTENANCE ON LINUX SYSTEMD SYSTEMS"
+.sp
+While Linux supports \fBcron\fR, depending on the distribution, \fBcron\fR may be an optional package not necessarily installed\&. On modern Linux distributions, systemd timers are superseding it\&.
+.sp
+If user systemd timers are available, they will be used as a replacement of \fBcron\fR\&.
+.sp
+In this case, \fBgit maintenance start\fR will create user systemd timer units and start the timers\&. The current list of user\-scheduled tasks can be found by running \fBsystemctl \-\-user list\-timers\fR\&. The timers written by \fBgit maintenance start\fR are similar to this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ systemctl \-\-user list\-timers
+NEXT                         LEFT          LAST                         PASSED     UNIT                         ACTIVATES
+Thu 2021\-04\-29 19:00:00 CEST 42min left    Thu 2021\-04\-29 18:00:11 CEST 17min ago  git\-maintenance@hourly\&.timer git\-maintenance@hourly\&.service
+Fri 2021\-04\-30 00:00:00 CEST 5h 42min left Thu 2021\-04\-29 00:00:11 CEST 18h ago    git\-maintenance@daily\&.timer  git\-maintenance@daily\&.service
+Mon 2021\-05\-03 00:00:00 CEST 3 days left   Mon 2021\-04\-26 00:00:11 CEST 3 days ago git\-maintenance@weekly\&.timer git\-maintenance@weekly\&.service
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+One timer is registered for each \fB\-\-schedule=<frequency>\fR option\&.
+.sp
+The definition of the systemd units can be inspected in the following files:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+~/\&.config/systemd/user/git\-maintenance@\&.timer
+~/\&.config/systemd/user/git\-maintenance@\&.service
+~/\&.config/systemd/user/timers\&.target\&.wants/git\-maintenance@hourly\&.timer
+~/\&.config/systemd/user/timers\&.target\&.wants/git\-maintenance@daily\&.timer
+~/\&.config/systemd/user/timers\&.target\&.wants/git\-maintenance@weekly\&.timer
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+\fBgit maintenance start\fR will overwrite these files and start the timer again with \fBsystemctl \-\-user\fR, so any customization should be done by creating a drop\-in file, i\&.e\&. a \fB\&.conf\fR suffixed file in the \fB~/\&.config/systemd/user/git\-maintenance@\&.service\&.d\fR directory\&.
+.sp
+\fBgit maintenance stop\fR will stop the user systemd timers and delete the above mentioned files\&.
+.sp
+For more details, see \fBsystemd\&.timer(5)\fR\&.
 .SH "BACKGROUND MAINTENANCE ON MACOS SYSTEMS"
 .sp
 While macOS technically supports \fBcron\fR, using \fBcrontab \-e\fR requires elevated privileges and the executed process does not have a full user context\&. Without a full user context, Git and its credential helpers cannot access stored credentials, so some maintenance tasks are not functional\&.
@@ -355,6 +441,124 @@ Windows does not support \fBcron\fR and instead has its own system for schedulin
 Note that since Git is a console application, these background tasks create a console window visible to the current user\&. This can be changed manually by selecting the "Run whether user is logged in or not" option in Task Scheduler\&. This change requires a password input, which is why \fBgit maintenance start\fR does not select it by default\&.
 .sp
 If you want to customize the background tasks, please rename the tasks so future calls to \fBgit maintenance (start|stop)\fR do not overwrite your custom tasks\&.
+.SH "CONFIGURATION"
+.sp
+Everything below this line in this section is selectively included from the \fBgit-config\fR(1) documentation\&. The content is the same as what\(cqs found there:
+.PP
+maintenance\&.auto
+.RS 4
+This boolean config option controls whether some commands run
+\fBgit maintenance run \-\-auto\fR
+after doing their normal work\&. Defaults to true\&.
+.RE
+.PP
+maintenance\&.strategy
+.RS 4
+This string config option provides a way to specify one of a few recommended schedules for background maintenance\&. This only affects which tasks are run during
+\fBgit maintenance run \-\-schedule=X\fR
+commands, provided no
+\fB\-\-task=<task>\fR
+arguments are provided\&. Further, if a
+\fBmaintenance\&.<task>\&.schedule\fR
+config value is set, then that value is used instead of the one provided by
+\fBmaintenance\&.strategy\fR\&. The possible strategy strings are:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBnone\fR: This default setting implies no task are run at any schedule\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBincremental\fR: This setting optimizes for performing small maintenance activities that do not delete any data\&. This does not schedule the
+\fBgc\fR
+task, but runs the
+\fBprefetch\fR
+and
+\fBcommit\-graph\fR
+tasks hourly, the
+\fBloose\-objects\fR
+and
+\fBincremental\-repack\fR
+tasks daily, and the
+\fBpack\-refs\fR
+task weekly\&.
+.RE
+.RE
+.PP
+maintenance\&.<task>\&.enabled
+.RS 4
+This boolean config option controls whether the maintenance task with name
+\fB<task>\fR
+is run when no
+\fB\-\-task\fR
+option is specified to
+\fBgit maintenance run\fR\&. These config values are ignored if a
+\fB\-\-task\fR
+option exists\&. By default, only
+\fBmaintenance\&.gc\&.enabled\fR
+is true\&.
+.RE
+.PP
+maintenance\&.<task>\&.schedule
+.RS 4
+This config option controls whether or not the given
+\fB<task>\fR
+runs during a
+\fBgit maintenance run \-\-schedule=<frequency>\fR
+command\&. The value must be one of "hourly", "daily", or "weekly"\&.
+.RE
+.PP
+maintenance\&.commit\-graph\&.auto
+.RS 4
+This integer config option controls how often the
+\fBcommit\-graph\fR
+task should be run as part of
+\fBgit maintenance run \-\-auto\fR\&. If zero, then the
+\fBcommit\-graph\fR
+task will not run with the
+\fB\-\-auto\fR
+option\&. A negative value will force the task to run every time\&. Otherwise, a positive value implies the command should run when the number of reachable commits that are not in the commit\-graph file is at least the value of
+\fBmaintenance\&.commit\-graph\&.auto\fR\&. The default value is 100\&.
+.RE
+.PP
+maintenance\&.loose\-objects\&.auto
+.RS 4
+This integer config option controls how often the
+\fBloose\-objects\fR
+task should be run as part of
+\fBgit maintenance run \-\-auto\fR\&. If zero, then the
+\fBloose\-objects\fR
+task will not run with the
+\fB\-\-auto\fR
+option\&. A negative value will force the task to run every time\&. Otherwise, a positive value implies the command should run when the number of loose objects is at least the value of
+\fBmaintenance\&.loose\-objects\&.auto\fR\&. The default value is 100\&.
+.RE
+.PP
+maintenance\&.incremental\-repack\&.auto
+.RS 4
+This integer config option controls how often the
+\fBincremental\-repack\fR
+task should be run as part of
+\fBgit maintenance run \-\-auto\fR\&. If zero, then the
+\fBincremental\-repack\fR
+task will not run with the
+\fB\-\-auto\fR
+option\&. A negative value will force the task to run every time\&. Otherwise, a positive value implies the command should run when the number of pack\-files not in the multi\-pack\-index is at least the value of
+\fBmaintenance\&.incremental\-repack\&.auto\fR\&. The default value is 10\&.
+.RE
 .SH "GIT"
 .sp
 Part of the \fBgit\fR(1) suite

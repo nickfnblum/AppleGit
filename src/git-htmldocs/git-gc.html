@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 9.0.0rc2" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>git-gc(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -806,6 +806,15 @@ other housekeeping tasks (e.g. rerere, working trees, reflog&#8230;) will
 be performed as well.</p></div>
 </dd>
 <dt class="hdlist1">
+--cruft
+</dt>
+<dd>
+<p>
+        When expiring unreachable objects, pack them separately into a
+        cruft pack instead of storing them as loose objects.
+</p>
+</dd>
+<dt class="hdlist1">
 --prune=&lt;date&gt;
 </dt>
 <dd>
@@ -883,8 +892,9 @@ users and their repositories.</p></div>
 <div class="sect1">
 <h2 id="_configuration">CONFIGURATION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>The below documentation is the same as what&#8217;s found in
-<a href="git-config.html">git-config(1)</a>:</p></div>
+<div class="paragraph"><p>Everything below this line in this section is selectively included
+from the <a href="git-config.html">git-config(1)</a> documentation. The content is the same
+as what&#8217;s found there:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 gc.aggressiveDepth
@@ -1009,17 +1019,29 @@ gc.packRefs
 </p>
 </dd>
 <dt class="hdlist1">
+gc.cruftPacks
+</dt>
+<dd>
+<p>
+        Store unreachable objects in a cruft pack (see
+        <a href="git-repack.html">git-repack(1)</a>) instead of as loose objects. The default
+        is <code>false</code>.
+</p>
+</dd>
+<dt class="hdlist1">
 gc.pruneExpire
 </dt>
 <dd>
 <p>
-        When <em>git gc</em> is run, it will call <em>prune --expire 2.weeks.ago</em>.
-        Override the grace period with this config variable.  The value
-        "now" may be used to disable this grace period and always prune
-        unreachable objects immediately, or "never" may be used to
-        suppress pruning.  This feature helps prevent corruption when
-        <em>git gc</em> runs concurrently with another process writing to the
-        repository; see the "NOTES" section of <a href="git-gc.html">git-gc(1)</a>.
+        When <em>git gc</em> is run, it will call <em>prune --expire 2.weeks.ago</em>
+        (and <em>repack --cruft --cruft-expiration 2.weeks.ago</em> if using
+        cruft packs via <code>gc.cruftPacks</code> or <code>--cruft</code>).  Override the
+        grace period with this config variable.  The value "now" may be
+        used to disable this grace period and always prune unreachable
+        objects immediately, or "never" may be used to suppress pruning.
+        This feature helps prevent corruption when <em>git gc</em> runs
+        concurrently with another process writing to the repository; see
+        the "NOTES" section of <a href="git-gc.html">git-gc(1)</a>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1104,12 +1126,14 @@ gc.rerereUnresolved
 <div class="paragraph"><p><em>git gc</em> tries very hard not to delete objects that are referenced
 anywhere in your repository. In particular, it will keep not only
 objects referenced by your current set of branches and tags, but also
-objects referenced by the index, remote-tracking branches, notes saved
-by <em>git notes</em> under refs/notes/, reflogs (which may reference commits
-in branches that were later amended or rewound), and anything else in
-the refs/* namespace.  If you are expecting some objects to be deleted
-and they aren&#8217;t, check all of those locations and decide whether it
-makes sense in your case to remove those references.</p></div>
+objects referenced by the index, remote-tracking branches, reflogs
+(which may reference commits in branches that were later amended or
+rewound), and anything else in the refs/* namespace. Note that a note
+(of the kind created by <em>git notes</em>) attached to an object does not
+contribute in keeping the object alive. If you are expecting some
+objects to be deleted and they aren&#8217;t, check all of those locations
+and decide whether it makes sense in your case to remove those
+references.</p></div>
 <div class="paragraph"><p>On the other hand, when <em>git gc</em> runs concurrently with another process,
 there is a risk of it deleting an object that the other process is using
 but hasn&#8217;t created a reference to. This may just cause the other process
@@ -1163,7 +1187,7 @@ seems to be low in practice).</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-03-10 08:03:13 PDT
+ 2022-09-15 05:23:11 JST
 </div>
 </div>
 </body>

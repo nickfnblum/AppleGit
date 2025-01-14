@@ -1,6 +1,9 @@
 #!/bin/sh
 
 test_description='test log -L'
+GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=main
+export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
+
 . ./test-lib.sh
 
 test_expect_success 'setup (import history)' '
@@ -134,7 +137,7 @@ test_expect_success 'range_set_union' '
 	test_seq 1000 > c.c &&
 	git add c.c &&
 	git commit -m "modify many lines" &&
-	git log $(for x in $(test_seq 200); do echo -L $((2*x)),+1:c.c; done)
+	git log $(for x in $(test_seq 200); do echo -L $((2*x)),+1:c.c || return 1; done)
 '
 
 test_expect_success '-s shows only line-log commits' '
@@ -309,6 +312,28 @@ test_expect_success 'parent oids with parent rewriting' '
 test_expect_success 'line-log with --before' '
 	echo $root_oid >expect &&
 	git log --format=%h --no-patch -L:func2:file.c --before=$first_tick >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'setup tests for zero-width regular expressions' '
+	cat >expect <<-EOF
+	Modify func1() in file.c
+	Add func1() and func2() in file.c
+	EOF
+'
+
+test_expect_success 'zero-width regex $ matches any function name' '
+	git log --format="%s" --no-patch "-L:$:file.c" >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'zero-width regex ^ matches any function name' '
+	git log --format="%s" --no-patch "-L:^:file.c" >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'zero-width regex .* matches any function name' '
+	git log --format="%s" --no-patch "-L:.*:file.c" >actual &&
 	test_cmp expect actual
 '
 

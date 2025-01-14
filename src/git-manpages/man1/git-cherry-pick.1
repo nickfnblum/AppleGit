@@ -2,12 +2,12 @@
 .\"     Title: git-cherry-pick
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/08/2021
+.\"      Date: 12/12/2022
 .\"    Manual: Git Manual
-.\"    Source: Git 2.30.1.378.g1d4f2316c5
+.\"    Source: Git 2.39.0
 .\"  Language: English
 .\"
-.TH "GIT\-CHERRY\-PICK" "1" "02/08/2021" "Git 2\&.30\&.1\&.378\&.g1d4f23" "Git Manual"
+.TH "GIT\-CHERRY\-PICK" "1" "12/12/2022" "Git 2\&.39\&.0" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ git-cherry-pick \- Apply the changes introduced by some existing commits
 .SH "SYNOPSIS"
 .sp
 .nf
-\fIgit cherry\-pick\fR [\-\-edit] [\-n] [\-m parent\-number] [\-s] [\-x] [\-\-ff]
+\fIgit cherry\-pick\fR [\-\-edit] [\-n] [\-m <parent\-number>] [\-s] [\-x] [\-\-ff]
                   [\-S[<keyid>]] <commit>\&...
 \fIgit cherry\-pick\fR (\-\-continue | \-\-skip | \-\-abort | \-\-quit)
 .fi
@@ -154,7 +154,7 @@ was to disable it\&. Now the default is not to do
 so this option is a no\-op\&.
 .RE
 .PP
-\-m parent\-number, \-\-mainline parent\-number
+\-m <parent\-number>, \-\-mainline <parent\-number>
 .RS 4
 Usually you cannot cherry\-pick a merge because you do not know which side of the merge should be considered the mainline\&. This option specifies the parent number (starting from 1) of the mainline and allows cherry\-pick to replay the change relative to the specified parent\&.
 .RE
@@ -229,7 +229,12 @@ for details\&.
 .PP
 \-\-rerere\-autoupdate, \-\-no\-rerere\-autoupdate
 .RS 4
-Allow the rerere mechanism to update the index with the result of auto\-conflict resolution if possible\&.
+After the rerere mechanism reuses a recorded resolution on the current conflict to update the files in the working tree, allow it to also update the index with the result of resolution\&.
+\fB\-\-no\-rerere\-autoupdate\fR
+is a good way to double\-check what
+\fBrerere\fR
+did and catch potential mismerges, before committing the result to the index with a separate
+\fBgit add\fR\&.
 .RE
 .SH "SEQUENCER SUBCOMMANDS"
 .PP

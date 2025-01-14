@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 9.0.0rc2" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>git-am(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -755,8 +755,10 @@ git-am(1) Manual Page
          [--whitespace=&lt;option&gt;] [-C&lt;n&gt;] [-p&lt;n&gt;] [--directory=&lt;dir&gt;]
          [--exclude=&lt;path&gt;] [--include=&lt;path&gt;] [--reject] [-q | --quiet]
          [--[no-]scissors] [-S[&lt;keyid&gt;]] [--patch-format=&lt;format&gt;]
+         [--quoted-cr=&lt;action&gt;]
+         [--empty=(stop|drop|keep)]
          [(&lt;mbox&gt; | &lt;Maildir&gt;)&#8230;]
-<em>git am</em> (--continue | --skip | --abort | --quit | --show-current-patch[=(diff|raw)])</pre>
+<em>git am</em> (--continue | --skip | --abort | --quit | --show-current-patch[=(diff|raw)] | --allow-empty)</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -848,6 +850,27 @@ current branch.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+--quoted-cr=&lt;action&gt;
+</dt>
+<dd>
+<p>
+        This flag will be passed down to <em>git mailinfo</em> (see <a href="git-mailinfo.html">git-mailinfo(1)</a>).
+</p>
+</dd>
+<dt class="hdlist1">
+--empty=(stop|drop|keep)
+</dt>
+<dd>
+<p>
+        By default, or when the option is set to <em>stop</em>, the command
+        errors out on an input e-mail message lacking a patch
+        and stops into the middle of the current am session. When this
+        option is set to <em>drop</em>, skip such an e-mail message instead.
+        When this option is set to <em>keep</em>, create an empty commit,
+        recording the contents of the e-mail message as its log.
+</p>
+</dd>
+<dt class="hdlist1">
 -m
 </dt>
 <dt class="hdlist1">
@@ -892,7 +915,7 @@ current branch.</p></div>
         Pass <code>-u</code> flag to <em>git mailinfo</em> (see <a href="git-mailinfo.html">git-mailinfo(1)</a>).
         The proposed commit log message taken from the e-mail
         is re-coded into UTF-8 encoding (configuration variable
-        <code>i18n.commitencoding</code> can be used to specify project&#8217;s
+        <code>i18n.commitEncoding</code> can be used to specify project&#8217;s
         preferred encoding if it is not UTF-8).
 </p>
 <div class="paragraph"><p>This was optional in prior versions of git, but now it is the
@@ -934,8 +957,13 @@ default.   You can use <code>--no-utf8</code> to override this.</p></div>
 </dt>
 <dd>
 <p>
-        Allow the rerere mechanism to update the index with the
-        result of auto-conflict resolution if possible.
+        After the rerere mechanism reuses a recorded resolution on
+        the current conflict to update the files in the working
+        tree, allow it to also update the index with the result of
+        resolution.  <code>--no-rerere-autoupdate</code> is a good way to
+        double-check what <code>rerere</code> did and catch potential
+        mismerges, before committing the result to the index with a
+        separate <code>git add</code>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1083,6 +1111,8 @@ default.   You can use <code>--no-utf8</code> to override this.</p></div>
 <dd>
 <p>
         Restore the original branch and abort the patching operation.
+        Revert contents of files involved in the am operation to their
+        pre-am state.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1103,6 +1133,16 @@ default.   You can use <code>--no-utf8</code> to override this.</p></div>
         conflicts.  If <code>raw</code> is specified, show the raw contents of
         the e-mail message; if <code>diff</code>, show the diff portion only.
         Defaults to <code>raw</code>.
+</p>
+</dd>
+<dt class="hdlist1">
+--allow-empty
+</dt>
+<dd>
+<p>
+        After a patch failure on an input e-mail message lacking a patch,
+        create an empty commit with the contents of the e-mail message
+        as its log message.
 </p>
 </dd>
 </dl></div>
@@ -1182,6 +1222,41 @@ information.</p></div>
 </div>
 </div>
 <div class="sect1">
+<h2 id="_configuration">CONFIGURATION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Everything below this line in this section is selectively included
+from the <a href="git-config.html">git-config(1)</a> documentation. The content is the same
+as what&#8217;s found there:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+am.keepcr
+</dt>
+<dd>
+<p>
+        If true, git-am will call git-mailsplit for patches in mbox format
+        with parameter <code>--keep-cr</code>. In this case git-mailsplit will
+        not remove <code>\r</code> from lines ending with <code>\r\n</code>. Can be overridden
+        by giving <code>--no-keep-cr</code> from the command line.
+        See <a href="git-am.html">git-am(1)</a>, <a href="git-mailsplit.html">git-mailsplit(1)</a>.
+</p>
+</dd>
+<dt class="hdlist1">
+am.threeWay
+</dt>
+<dd>
+<p>
+        By default, <code>git am</code> will fail if the patch does not apply cleanly. When
+        set to true, this setting tells <code>git am</code> to fall back on 3-way merge if
+        the patch records the identity of blobs it is supposed to apply to and
+        we have those blobs available locally (equivalent to giving the <code>--3way</code>
+        option from the command line). Defaults to <code>false</code>.
+        See <a href="git-am.html">git-am(1)</a>.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><a href="git-apply.html">git-apply(1)</a>.</p></div>
@@ -1198,7 +1273,7 @@ information.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-11-02 14:02:22 PST
+ 2022-09-15 05:23:11 JST
 </div>
 </div>
 </body>
